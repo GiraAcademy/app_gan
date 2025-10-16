@@ -11,13 +11,16 @@ permissions:
   pages: write
   id-token: write
 
-# Permitir solo un deployment concurrente
+# Permitir solo un deployment concurrente, cancelar los que estén en progreso
 concurrency:
-  group: "pages"
+  group: pages
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     
     steps:
