@@ -1,0 +1,13 @@
+# robots.txt para gan.gira360.com
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://gan.gira360.com/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1
+
+# Permitir todos los recursos
+Allow: /assets/
+Allow: /images/
