@@ -22,6 +22,7 @@ import {
   toggleLayer,
   initializeMap
 } from '@/components/map/mapUtils'
+import MapCoordinatesScale from '@/components/map/MapCoordinatesScale.vue'
 
 const props = defineProps({
   layers: Object,
@@ -34,8 +35,8 @@ const props = defineProps({
 const emit = defineEmits(['updateLoading', 'updateError', 'updatePotrerosData'])
 
 const mapContainer = ref(null)
+const mapInstance = ref(null) // Ref reactivo para el mapa
 
-let map = null
 let satelliteLayer = null
 let potrerosLayer = null
 let highlightLayer = null // Capa para resaltar el potrero seleccionado
@@ -85,7 +86,7 @@ onMounted(async () => {
   await loadPotreros()
 
   // Inicializar mapa con configuración estándar
-  map = initializeMap({
+  mapInstance.value = initializeMap({
     container: mapContainer.value,
     center: initialMapConfig.center,
     zoom: initialMapConfig.zoom,
@@ -103,7 +104,7 @@ onMounted(async () => {
   // Ajustar el mapa a los límites de los potreros
   if (potrerosGeoJSON.value) {
     fitMapToBounds({ 
-      map, 
+      map: mapInstance.value, 
       getBounds, 
       geoJSONData: potrerosGeoJSON.value 
     })
@@ -111,27 +112,27 @@ onMounted(async () => {
 
   // Agregar capas iniciales según props
   if (props.layers?.satellite) {
-    satelliteLayer.addTo(map)
+    satelliteLayer.addTo(mapInstance.value)
   }
   if (props.layers?.potreros) {
-    potrerosLayer.addTo(map)
+    potrerosLayer.addTo(mapInstance.value)
   }
 })
 
 // Watch para cambios en las capas
 watch(() => props.layers, (newLayers) => {
-  if (!map) return
+  if (!mapInstance.value) return
 
   // Capa Satelite
   toggleLayer({
-    map,
+    map: mapInstance.value,
     layer: satelliteLayer,
     shouldShow: newLayers.satellite
   })
 
   // Capa Potreros
   toggleLayer({
-    map,
+    map: mapInstance.value,
     layer: potrerosLayer,
     shouldShow: newLayers.potreros
   })
@@ -139,11 +140,11 @@ watch(() => props.layers, (newLayers) => {
 
 // Watch para recargar potreros si cambian los datos
 watch(potrerosGeoJSON, (newData) => {
-  if (!map || !newData) return
+  if (!mapInstance.value || !newData) return
 
   // Remover la capa antigua
-  if (potrerosLayer && map.hasLayer(potrerosLayer)) {
-    map.removeLayer(potrerosLayer)
+  if (potrerosLayer && mapInstance.value.hasLayer(potrerosLayer)) {
+    mapInstance.value.removeLayer(potrerosLayer)
   }
 
   // Crear nueva capa usando el composable
@@ -151,12 +152,12 @@ watch(potrerosGeoJSON, (newData) => {
 
   // Agregar si debe estar visible
   if (props.layers?.potreros) {
-    potrerosLayer.addTo(map)
+    potrerosLayer.addTo(mapInstance.value)
   }
 
   // Ajustar vista
   fitMapToBounds({ 
-    map, 
+    map: mapInstance.value, 
     getBounds, 
     geoJSONData: newData 
   })
@@ -164,24 +165,24 @@ watch(potrerosGeoJSON, (newData) => {
 
 // Watch para manejar la selección de potrero
 watch(() => props.selectedPotrero, (potreroData) => {
-  if (!map) return
+  if (!mapInstance.value) return
 
   if (potreroData && potreroData.geometry) {
     // Crear y mostrar resaltado
     highlightLayer = highlightPotrero({
-      map,
+      map: mapInstance.value,
       potreroData,
       currentHighlight: highlightLayer,
       L
     })
   } else {
     // Limpiar resaltado y volver a vista general
-    clearHighlight({ map, highlightLayer })
+    clearHighlight({ map: mapInstance.value, highlightLayer })
     highlightLayer = null
     
     if (potrerosGeoJSON.value) {
       fitMapToBounds({ 
-        map, 
+        map: mapInstance.value, 
         getBounds, 
         geoJSONData: potrerosGeoJSON.value 
       })
@@ -192,14 +193,14 @@ watch(() => props.selectedPotrero, (potreroData) => {
 // Exponer métodos públicos para control externo
 defineExpose({
   clearSelection() {
-    if (map && highlightLayer) {
-      clearHighlight({ map, highlightLayer })
+    if (mapInstance.value && highlightLayer) {
+      clearHighlight({ map: mapInstance.value, highlightLayer })
       highlightLayer = null
       
       // Volver a vista general
       if (potrerosGeoJSON.value) {
         fitMapToBounds({ 
-          map, 
+          map: mapInstance.value, 
           getBounds, 
           geoJSONData: potrerosGeoJSON.value 
         })
@@ -210,5 +211,10 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="mapContainer" class="w-full h-full"></div>
+  <div class="w-full h-full relative">
+    <div ref="mapContainer" class="w-full h-full"></div>
+    
+    <!-- Componente de coordenadas y escala -->
+    <MapCoordinatesScale v-if="mapInstance" :map="mapInstance" />
+  </div>
 </template>
