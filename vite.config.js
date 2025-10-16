@@ -15,6 +15,7 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
-  // Configuración para GitHub Pages
-  base: '/app_gan/',
+  // Configuración para dominio personalizado (gan.gira360.com)
+  // Si usas giraacademy.github.io/app_gan, cambia a: base: '/app_gan/'
+  base: '/',
 })
