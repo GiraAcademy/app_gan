@@ -14,6 +14,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@cerebras/cerebras_cloud_sdk": "^1.50.0",
     "leaflet": "^1.9.4",
     "pinia": "^3.0.3",
     "proj4": "^2.19.10",

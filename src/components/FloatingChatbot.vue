@@ -1,6 +1,7 @@
 <script setup>
-import { ref, nextTick, inject } from 'vue'
+import { ref, nextTick, computed } from 'vue'
 import chatIcon from '../assets/chat_ia.png'
+import { sendMessageToCerebras, isCerebrasConfigured } from '../services/cerebrasService'
 
 // Props para interactuar con el mapa y datos
 const props = defineProps({
@@ -23,7 +24,7 @@ const isMinimized = ref(false)
 const messages = ref([
   {
     id: 1,
-    text: '¡Hola! Soy tu asistente de IA para análisis geoespacial de GIRA. 🌍\n\nPuedo ayudarte a:\n• Analizar datos de potreros\n• Buscar y filtrar información\n• Calcular estadísticas\n• Interactuar con el mapa\n• Responder preguntas sobre los datos\n\n¿En qué puedo ayudarte?',
+    text: '¡Hola! Soy tu asistente de IA para el Hato La Palma. 🌍\n\nPuedo ayudarte con:\n• Análisis de datos de potreros\n• Información sobre superficies y ubicaciones\n• Uso del geoportal y sus funcionalidades\n• Consultas sobre gestión territorial\n\n¿En qué puedo ayudarte?',
     sender: 'bot',
     timestamp: new Date(),
     type: 'welcome'
@@ -33,7 +34,10 @@ const messages = ref([
 const userInput = ref('')
 const isTyping = ref(false)
 const chatContainer = ref(null)
-const conversationContext = ref([]) // Historial para contexto de IA
+const conversationContext = ref([]) // Historial para el modelo
+
+// Verificar si Cerebras está configurado
+const cerebrasConfigured = computed(() => isCerebrasConfigured())
 
 // Toggle del chatbot
 function toggleChat() {
@@ -43,6 +47,17 @@ function toggleChat() {
   }
   if (isOpen.value) {
     scrollToBottom()
+    
+    // Mostrar advertencia si no está configurado Cerebras
+    if (!cerebrasConfigured.value && messages.value.length === 1) {
+      messages.value.push({
+        id: Date.now(),
+        text: '⚠️ El chatbot está en modo de demostración. Para habilitar el asistente inteligente, configura tu API key de Cerebras en el archivo .env',
+        sender: 'bot',
+        timestamp: new Date(),
+        type: 'warning'
+      })
+    }
   }
 }
 
@@ -53,45 +68,6 @@ function minimizeChat() {
 function closeChat() {
   isOpen.value = false
   isMinimized.value = false
-}
-
-// Intenciones del usuario (se expandirá con IA)
-const intentPatterns = {
-  // Análisis de datos
-  statistics: {
-    keywords: ['total', 'suma', 'promedio', 'estadística', 'cuántos', 'cuántas'],
-    action: 'analyzeStatistics'
-  },
-  
-  // Búsqueda y filtrado
-  search: {
-    keywords: ['buscar', 'encontrar', 'mostrar', 'ver', 'dónde está', 'ubicación'],
-    action: 'searchPotrero'
-  },
-  
-  // Comparación
-  compare: {
-    keywords: ['comparar', 'mayor', 'menor', 'más grande', 'más pequeño', 'diferencia'],
-    action: 'comparePotreros'
-  },
-  
-  // Interacción con mapa
-  map: {
-    keywords: ['mapa', 'zoom', 'acercar', 'alejar', 'centrar', 'capa'],
-    action: 'mapInteraction'
-  },
-  
-  // Información específica
-  info: {
-    keywords: ['información', 'detalles', 'datos', 'características', 'qué es'],
-    action: 'getInfo'
-  },
-  
-  // Ayuda
-  help: {
-    keywords: ['ayuda', 'help', 'qué puedes hacer', 'comandos', 'opciones'],
-    action: 'showHelp'
-  }
 }
 
 // Enviar mensaje
@@ -114,38 +90,40 @@ async function sendMessage() {
   userInput.value = ''
   await scrollToBottom()
   
-  // Simular procesamiento de IA
+  // Mostrar indicador de escritura
   isTyping.value = true
   
   try {
-    // Simular delay de procesamiento (en el futuro será llamada a OpenAI)
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1500))
+    let responseText = ''
     
-    // Procesar mensaje y obtener respuesta
-    const response = await processUserMessage(text)
+    // Si Cerebras está configurado, usar IA real
+    if (cerebrasConfigured.value) {
+      responseText = await sendMessageToCerebras(
+        conversationContext.value,
+        props.potrerosData
+      )
+    } else {
+      // Modo demo: respuesta simulada
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      responseText = getFallbackResponse(text)
+    }
     
     const botMessage = {
       id: Date.now() + 1,
-      text: response.text,
+      text: responseText,
       sender: 'bot',
       timestamp: new Date(),
-      type: response.type,
-      data: response.data
+      type: 'response'
     }
     
     messages.value.push(botMessage)
-    conversationContext.value.push({ role: 'assistant', content: response.text })
-    
-    // Ejecutar acciones si las hay
-    if (response.action) {
-      executeAction(response.action, response.data)
-    }
+    conversationContext.value.push({ role: 'assistant', content: responseText })
     
   } catch (error) {
     console.error('Error procesando mensaje:', error)
     messages.value.push({
       id: Date.now() + 1,
-      text: 'Lo siento, hubo un error procesando tu solicitud. Por favor intenta de nuevo.',
+      text: `❌ ${error.message || 'Lo siento, hubo un error procesando tu solicitud. Por favor intenta de nuevo.'}`,
       sender: 'bot',
       timestamp: new Date(),
       type: 'error'
@@ -156,330 +134,28 @@ async function sendMessage() {
   }
 }
 
-// Procesar mensaje del usuario (placeholder para futura integración con OpenAI)
-async function processUserMessage(userMessage) {
+// Respuesta de respaldo cuando Cerebras no está configurado
+function getFallbackResponse(userMessage) {
   const lowerMessage = userMessage.toLowerCase()
   
-  // Detectar intención
-  const intent = detectIntent(lowerMessage)
-  
-  // Procesar según la intención
-  switch (intent.action) {
-    case 'analyzeStatistics':
-      return analyzeStatistics(userMessage, lowerMessage)
-      
-    case 'searchPotrero':
-      return searchPotrero(userMessage, lowerMessage)
-      
-    case 'comparePotreros':
-      return comparePotreros(userMessage, lowerMessage)
-      
-    case 'mapInteraction':
-      return handleMapInteraction(userMessage, lowerMessage)
-      
-    case 'getInfo':
-      return getInformation(userMessage, lowerMessage)
-      
-    case 'showHelp':
-      return showHelp()
-      
-    default:
-      return getDefaultResponse(userMessage)
-  }
-}
-
-// Detectar intención del usuario
-function detectIntent(message) {
-  for (const [intentName, intent] of Object.entries(intentPatterns)) {
-    if (intent.keywords.some(keyword => message.includes(keyword))) {
-      return { name: intentName, ...intent }
-    }
-  }
-  return { name: 'unknown', action: 'default' }
-}
-
-// === FUNCIONES DE ANÁLISIS ===
-
-// Analizar estadísticas
-function analyzeStatistics(original, lower) {
-  if (!props.potrerosData || !props.potrerosData.features) {
-    return {
-      text: 'No hay datos de potreros disponibles en este momento. Por favor asegúrate de que la capa de potreros esté activa.',
-      type: 'info'
-    }
-  }
-  
-  const features = props.potrerosData.features
-  const superficies = features.map(f => f.properties.super_ha || 0)
-  
-  const total = superficies.reduce((sum, val) => sum + val, 0)
-  const promedio = total / features.length
-  const max = Math.max(...superficies)
-  const min = Math.min(...superficies)
-  
-  const maxPotrero = features.find(f => f.properties.super_ha === max)
-  const minPotrero = features.find(f => f.properties.super_ha === min)
-  
-  return {
-    text: `📊 **Análisis Estadístico de Potreros**\n\n` +
-          `**Total de potreros:** ${features.length}\n` +
-          `**Superficie total:** ${total.toFixed(2)} ha\n` +
-          `**Superficie promedio:** ${promedio.toFixed(2)} ha\n\n` +
-          `**Potrero más grande:** ${maxPotrero?.properties.nombre || 'N/A'} (${max.toFixed(2)} ha)\n` +
-          `**Potrero más pequeño:** ${minPotrero?.properties.nombre || 'N/A'} (${min.toFixed(2)} ha)`,
-    type: 'statistics',
-    data: { total, promedio, max, min, count: features.length }
-  }
-}
-
-// Buscar potrero
-function searchPotrero(original, lower) {
-  if (!props.potrerosData || !props.potrerosData.features) {
-    return {
-      text: 'No hay datos de potreros disponibles para buscar.',
-      type: 'info'
-    }
-  }
-  
-  const features = props.potrerosData.features
-  
-  // Extraer posible nombre del potrero del mensaje
-  const palabras = original.split(' ')
-  const potencialNombre = palabras.slice(1).join(' ').toLowerCase()
-  
-  const encontrados = features.filter(f => 
-    f.properties.nombre?.toLowerCase().includes(potencialNombre)
-  )
-  
-  if (encontrados.length === 0) {
-    const nombres = features.map(f => f.properties.nombre).join(', ')
-    return {
-      text: `No encontré ningún potrero con ese nombre. Los potreros disponibles son:\n\n${nombres}`,
-      type: 'search'
-    }
-  }
-  
-  if (encontrados.length === 1) {
-    const potrero = encontrados[0].properties
-    return {
-      text: `🔍 **Potrero Encontrado**\n\n` +
-            `**Nombre:** ${potrero.nombre}\n` +
-            `**Superficie:** ${potrero.super_ha?.toFixed(2) || 'N/A'} ha\n` +
-            `**ID:** ${potrero.id}\n\n` +
-            `¿Deseas que lo seleccione en el mapa?`,
-      type: 'search',
-      data: { potrero: encontrados[0] },
-      action: 'selectPotrero'
-    }
-  }
-  
-  const lista = encontrados.map(f => 
-    `• ${f.properties.nombre} (${f.properties.super_ha?.toFixed(2)} ha)`
-  ).join('\n')
-  
-  return {
-    text: `Encontré ${encontrados.length} potreros:\n\n${lista}`,
-    type: 'search',
-    data: { potreros: encontrados }
-  }
-}
-
-// Comparar potreros
-function comparePotreros(original, lower) {
-  if (!props.potrerosData || !props.potrerosData.features) {
-    return {
-      text: 'No hay datos disponibles para comparar.',
-      type: 'info'
-    }
-  }
-  
-  const features = props.potrerosData.features
-  
-  if (lower.includes('mayor') || lower.includes('más grande')) {
-    const sorted = [...features].sort((a, b) => 
-      (b.properties.super_ha || 0) - (a.properties.super_ha || 0)
-    )
-    const top3 = sorted.slice(0, 3)
+  if (lowerMessage.includes('potrero') || lowerMessage.includes('superficie') || lowerMessage.includes('hectárea')) {
+    const totalPotreros = props.potrerosData?.features?.length || 0
+    const superficieTotal = props.potrerosData?.features?.reduce(
+      (sum, feature) => sum + (feature.properties?.super_ha || 0), 
+      0
+    ).toFixed(2) || 0
     
-    const lista = top3.map((f, i) => 
-      `${i + 1}. ${f.properties.nombre} - ${f.properties.super_ha?.toFixed(2)} ha`
-    ).join('\n')
-    
-    return {
-      text: `🏆 **Top 3 Potreros Más Grandes**\n\n${lista}`,
-      type: 'comparison',
-      data: { potreros: top3 }
-    }
+    return `📊 Información del Hato La Palma:\n\n• Total de potreros: ${totalPotreros}\n• Superficie total: ${superficieTotal} hectáreas\n\n💡 Configura la API key de Cerebras para obtener respuestas más detalladas y personalizadas.`
   }
   
-  if (lower.includes('menor') || lower.includes('más pequeño')) {
-    const sorted = [...features].sort((a, b) => 
-      (a.properties.super_ha || 0) - (b.properties.super_ha || 0)
-    )
-    const bottom3 = sorted.slice(0, 3)
-    
-    const lista = bottom3.map((f, i) => 
-      `${i + 1}. ${f.properties.nombre} - ${f.properties.super_ha?.toFixed(2)} ha`
-    ).join('\n')
-    
-    return {
-      text: `📉 **Top 3 Potreros Más Pequeños**\n\n${lista}`,
-      type: 'comparison',
-      data: { potreros: bottom3 }
-    }
+  if (lowerMessage.includes('ayuda') || lowerMessage.includes('help')) {
+    return `🤖 Estoy en modo de demostración.\n\nPara habilitar el asistente inteligente completo:\n\n1. Obtén una API key gratuita en: https://cloud.cerebras.ai/\n2. Crea un archivo .env en la raíz del proyecto\n3. Agrega: VITE_CEREBRAS_API_KEY=tu-api-key\n4. Reinicia el servidor de desarrollo\n\nCon la IA activada podré ayudarte con análisis detallados, consultas complejas y recomendaciones personalizadas.`
   }
   
-  return {
-    text: 'Puedo comparar potreros por tamaño. Prueba preguntando:\n• "¿Cuáles son los potreros más grandes?"\n• "¿Cuáles son los potreros más pequeños?"',
-    type: 'info'
-  }
+  return `Recibí tu mensaje: "${userMessage}"\n\n🤖 Estoy en modo de demostración limitada. Para respuestas inteligentes y análisis avanzados, por favor configura tu API key de Cerebras en el archivo .env\n\nMás info: https://cloud.cerebras.ai/`
 }
 
-// Interacción con mapa
-function handleMapInteraction(original, lower) {
-  if (lower.includes('capa')) {
-    return {
-      text: 'Puedo ayudarte con las capas del mapa. Las capas disponibles son:\n\n• **Satélite** - Vista satelital del terreno\n• **Potreros** - Polígonos de potreros\n\nPuedes activarlas o desactivarlas desde el panel lateral.',
-      type: 'map'
-    }
-  }
-  
-  if (lower.includes('zoom') || lower.includes('acercar') || lower.includes('alejar')) {
-    return {
-      text: 'Para hacer zoom en el mapa:\n• Usa la rueda del mouse\n• Usa los botones + y - en el mapa\n• Haz doble clic para acercar\n\n¿Necesitas que centre el mapa en algún potrero específico?',
-      type: 'map'
-    }
-  }
-  
-  return {
-    text: 'Puedo ayudarte a interactuar con el mapa. Puedes preguntarme sobre:\n• Capas disponibles\n• Cómo hacer zoom\n• Centrar el mapa en un potrero',
-    type: 'map'
-  }
-}
-
-// Obtener información
-function getInformation(original, lower) {
-  if (props.selectedPotrero) {
-    const p = props.selectedPotrero
-    return {
-      text: `📍 **Potrero Seleccionado Actualmente**\n\n` +
-            `**Nombre:** ${p.nombre}\n` +
-            `**Superficie:** ${p.superficie?.toFixed(2) || 'N/A'} ha\n` +
-            `**ID:** ${p.id}`,
-      type: 'info'
-    }
-  }
-  
-  return {
-    text: 'Puedo proporcionar información sobre:\n• Potreros individuales\n• Estadísticas generales\n• Funcionalidades del sistema\n\n¿Qué te gustaría saber?',
-    type: 'info'
-  }
-}
-
-// Mostrar ayuda
-function showHelp() {
-  return {
-    text: `🤖 **Comandos y Capacidades**\n\n` +
-          `**Análisis de Datos:**\n` +
-          `• "Estadísticas de potreros"\n` +
-          `• "¿Cuál es la superficie total?"\n` +
-          `• "¿Cuántos potreros hay?"\n\n` +
-          `**Búsqueda:**\n` +
-          `• "Buscar potrero [nombre]"\n` +
-          `• "Mostrar información de [nombre]"\n\n` +
-          `**Comparación:**\n` +
-          `• "¿Cuáles son los potreros más grandes?"\n` +
-          `• "Comparar potreros por tamaño"\n\n` +
-          `**Interacción con Mapa:**\n` +
-          `• "¿Cómo hacer zoom?"\n` +
-          `• "Información sobre capas"\n\n` +
-          `_Próximamente: Integración con IA avanzada para consultas en lenguaje natural._`,
-    type: 'help'
-  }
-}
-
-// Respuesta por defecto
-function getDefaultResponse(message) {
-  return {
-    text: `Entiendo tu consulta. En este momento puedo ayudarte con:\n\n` +
-          `• Análisis estadísticos de potreros\n` +
-          `• Búsqueda de potreros específicos\n` +
-          `• Comparaciones entre potreros\n` +
-          `• Información sobre el mapa\n\n` +
-          `_Nota: Pronto me conectaré con IA avanzada para responder preguntas más complejas._\n\n` +
-          `Escribe "ayuda" para ver ejemplos de comandos.`,
-    type: 'default'
-  }
-}
-
-// Ejecutar acciones en el mapa
-function executeAction(action, data) {
-  switch (action) {
-    case 'selectPotrero':
-      if (data && data.potrero) {
-        const props = data.potrero.properties
-        emit('selectPotrero', {
-          id: props.id,
-          nombre: props.nombre,
-          superficie: props.super_ha,
-          geometry: data.potrero.geometry
-        })
-      }
-      break
-      
-    case 'toggleLayer':
-      if (data && data.layerName) {
-        emit('toggleLayer', data.layerName, data.visible)
-      }
-      break
-      
-    case 'fitBounds':
-      emit('fitBounds')
-      break
-  }
-}
-
-// === PLACEHOLDER PARA INTEGRACIÓN CON OPENAI ===
-/*
-async function callOpenAI(userMessage) {
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY
-  
-  const systemPrompt = `Eres un asistente de IA especializado en análisis geoespacial 
-  para el sistema GIRA. Tienes acceso a datos de potreros agrícolas y puedes ayudar 
-  con análisis, búsquedas y visualización de datos en el mapa.
-  
-  Datos disponibles: ${JSON.stringify({
-    totalPotreros: props.potrerosData?.features?.length || 0,
-    potreros: props.potrerosData?.features?.map(f => ({
-      nombre: f.properties.nombre,
-      superficie: f.properties.super_ha
-    })) || []
-  })}`
-  
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: 'gpt-4',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...conversationContext.value,
-        { role: 'user', content: userMessage }
-      ],
-      temperature: 0.7,
-      max_tokens: 500
-    })
-  })
-  
-  const data = await response.json()
-  return data.choices[0].message.content
-}
-*/
-
-// Scroll al final
+// Scroll automático al final del chat
 async function scrollToBottom() {
   await nextTick()
   if (chatContainer.value) {
@@ -495,32 +171,12 @@ function formatTime(date) {
   })
 }
 
-// Manejar Enter
-function handleKeydown(event) {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault()
-    sendMessage()
-  }
-}
-
-// Sugerencias rápidas inteligentes
-const quickSuggestions = [
-  'Estadísticas de potreros',
-  '¿Cuáles son los más grandes?',
-  'Ayuda'
-]
-
-function selectSuggestion(suggestion) {
-  userInput.value = suggestion
-  sendMessage()
-}
-
 // Limpiar conversación
 function clearConversation() {
   messages.value = [
     {
       id: Date.now(),
-      text: '¡Hola! Soy tu asistente de IA para análisis geoespacial de GIRA. 🌍\n\nPuedo ayudarte a:\n• Analizar datos de potreros\n• Buscar y filtrar información\n• Calcular estadísticas\n• Interactuar con el mapa\n• Responder preguntas sobre los datos\n\n¿En qué puedo ayudarte?',
+      text: '¡Hola! Soy tu asistente de IA para el Hato La Palma. 🌍\n\nPuedo ayudarte con:\n• Análisis de datos de potreros\n• Información sobre superficies y ubicaciones\n• Uso del geoportal y sus funcionalidades\n• Consultas sobre gestión territorial\n\n¿En qué puedo ayudarte?',
       sender: 'bot',
       timestamp: new Date(),
       type: 'welcome'
@@ -535,6 +191,14 @@ function formatMessage(text) {
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/_(.*?)_/g, '<em>$1</em>')
     .replace(/\n/g, '<br>')
+}
+
+// Manejar Enter
+function handleKeydown(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault()
+    sendMessage()
+  }
 }
 </script>
 
