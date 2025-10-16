@@ -1,7 +1,7 @@
 <script setup>
 import { ref, nextTick, computed } from 'vue'
 import chatIcon from '../assets/chat_ia.png'
-import { sendMessageToCerebras, isCerebrasConfigured } from '../services/cerebrasService'
+import { sendMessageToCerebras, isCerebrasConfigured, parseActions } from '../services/cerebrasService'
 
 // Props para interactuar con el mapa y datos
 const props = defineProps({
@@ -98,10 +98,21 @@ async function sendMessage() {
     
     // Si Cerebras está configurado, usar IA real
     if (cerebrasConfigured.value) {
-      responseText = await sendMessageToCerebras(
+      const rawResponse = await sendMessageToCerebras(
         conversationContext.value,
         props.potrerosData
       )
+      
+      // Extraer acciones del mensaje
+      const { cleanMessage, actions } = parseActions(rawResponse)
+      responseText = cleanMessage
+      
+      // Ejecutar acciones (seleccionar potreros)
+      if (actions.length > 0) {
+        actions.forEach(action => {
+          executeAction(action)
+        })
+      }
     } else {
       // Modo demo: respuesta simulada
       await new Promise(resolve => setTimeout(resolve, 1000))
@@ -153,6 +164,47 @@ function getFallbackResponse(userMessage) {
   }
   
   return `Recibí tu mensaje: "${userMessage}"\n\n🤖 Estoy en modo de demostración limitada. Para respuestas inteligentes y análisis avanzados, por favor configura tu API key de Cerebras en el archivo .env\n\nMás info: https://cloud.cerebras.ai/`
+}
+
+// Ejecutar acciones del chatbot (seleccionar potreros, etc.)
+function executeAction(action) {
+  console.log('🤖 Ejecutando acción:', action)
+  
+  switch (action.type) {
+    case 'SELECT_POTRERO':
+      selectPotreroById(action.data)
+      break
+    default:
+      console.warn('⚠️ Acción desconocida:', action.type)
+  }
+}
+
+// Seleccionar potrero por ID
+function selectPotreroById(potreroId) {
+  if (!props.potrerosData?.features) {
+    console.warn('⚠️ No hay datos de potreros disponibles')
+    return
+  }
+  
+  // Buscar el potrero por ID
+  const potrero = props.potrerosData.features.find(
+    feature => String(feature.properties.id) === String(potreroId)
+  )
+  
+  if (potrero) {
+    const props_data = potrero.properties
+    console.log('✅ Seleccionando potrero:', props_data.nombre)
+    
+    // Emitir evento para seleccionar el potrero en el mapa
+    emit('selectPotrero', {
+      id: props_data.id,
+      nombre: props_data.nombre,
+      superficie: props_data.super_ha,
+      geometry: potrero.geometry
+    })
+  } else {
+    console.warn('⚠️ No se encontró potrero con ID:', potreroId)
+  }
 }
 
 // Scroll automático al final del chat

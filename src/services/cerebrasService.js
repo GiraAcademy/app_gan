@@ -64,6 +64,14 @@ ${JSON.stringify(potrerosList, null, 2)}
 ⚠️ Si te preguntan por datos que no están disponibles, indica claramente que esa información no está en el sistema
 ⚠️ Cuando hagas cálculos, usa ÚNICAMENTE los datos de superficie (super_ha) que aparecen arriba
 
+**INTERACCIÓN CON EL MAPA:**
+Puedes seleccionar potreros en el mapa. Cuando el usuario pida seleccionar/mostrar/destacar un potrero:
+1. Incluye en tu respuesta la acción: [ACCION:SELECT_POTRERO:id_del_potrero]
+2. Ejemplos:
+   - "Claro, voy a seleccionar el potrero Camino. [ACCION:SELECT_POTRERO:1]"
+   - "Te muestro los 3 más grandes: [ACCION:SELECT_POTRERO:5] [ACCION:SELECT_POTRERO:12]"
+   - "Seleccionando el potrero con mayor superficie: [ACCION:SELECT_POTRERO:8]"
+
 **Funcionalidades disponibles en el sistema:**
 1. Visualización de potreros en mapa interactivo (Leaflet con EPSG:2202)
 2. Tabla de atributos con los 3 campos: ID, Nombre, Superficie
@@ -187,4 +195,34 @@ export async function sendMessageToCerebrasStream(messages, potrerosData, onChun
  */
 export function isCerebrasConfigured() {
   return !!CEREBRAS_API_KEY && CEREBRAS_API_KEY !== 'your-api-key-here'
+}
+
+/**
+ * Extrae acciones del mensaje del asistente
+ * Busca patrones como [ACCION:SELECT_POTRERO:123]
+ * @param {string} message - Mensaje del asistente
+ * @returns {Object} { cleanMessage, actions }
+ */
+export function parseActions(message) {
+  const actionRegex = /\[ACCION:([A-Z_]+):([^\]]+)\]/g
+  const actions = []
+  let match
+
+  // Extraer todas las acciones
+  while ((match = actionRegex.exec(message)) !== null) {
+    const [fullMatch, actionType, actionData] = match
+    actions.push({
+      type: actionType,
+      data: actionData,
+      fullMatch
+    })
+  }
+
+  // Limpiar el mensaje removiendo las acciones
+  const cleanMessage = message.replace(actionRegex, '').trim()
+
+  return {
+    cleanMessage,
+    actions
+  }
 }
