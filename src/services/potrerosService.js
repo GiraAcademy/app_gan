@@ -5,8 +5,8 @@
 import { saveToIndexedDB, getFromIndexedDB, cleanExpiredCache, BOSQUES_STORE, POTREROS_STORE } from '@/utils/cacheUtils'
 
 const API_BASE_URL = 'https://palma.gira360.com'
-const POTREROS_CACHE_KEY = 'potreros_data_v2'
-const CACHE_VERSION = '2.0'
+const POTREROS_CACHE_KEY = 'potreros_data_v3'
+const CACHE_VERSION = '3.0'
 const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24 horas
 
 /**
@@ -107,12 +107,18 @@ export function optimizeGeoJSONData(geojson) {
       type: 'Feature',
       geometry: optimizeGeometry(feature.geometry),
       properties: {
-        // Mantener solo propiedades esenciales para potreros
+        // Mantener TODAS las propiedades necesarias para popups y funcionalidad
         id: feature.properties?.id,
         nombre: feature.properties?.nombre,
         area_ha: feature.properties?.area_ha,
+        super_ha: feature.properties?.super_ha,
         tipo: feature.properties?.tipo,
-        // Agregar propiedades calculadas si es necesario
+        // Propiedades necesarias para popups
+        bosques_ha: feature.properties?.bosques_ha,
+        laguna_ha: feature.properties?.laguna_ha,
+        pecuari_ha: feature.properties?.pecuari_ha,
+        // Mantener cualquier otra propiedad que pueda existir
+        ...feature.properties
       }
     }))
   }

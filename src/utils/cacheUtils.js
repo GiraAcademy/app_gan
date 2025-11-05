@@ -4,9 +4,10 @@
 
 // Configuración de IndexedDB para caché avanzado
 const DB_NAME = 'MapCacheDB'
-const DB_VERSION = 2
+const DB_VERSION = 3
 const BOSQUES_STORE = 'bosques'
 const POTREROS_STORE = 'potreros'
+const PERIMETRO_STORE = 'perimetro'
 
 /**
  * Inicializa IndexedDB para caché avanzado
@@ -31,6 +32,13 @@ function initIndexedDB() {
       // Crear store para potreros si no existe
       if (!db.objectStoreNames.contains(POTREROS_STORE)) {
         const store = db.createObjectStore(POTREROS_STORE, { keyPath: 'id' })
+        store.createIndex('timestamp', 'timestamp', { unique: false })
+        store.createIndex('version', 'version', { unique: false })
+      }
+
+      // Crear store para perímetro si no existe
+      if (!db.objectStoreNames.contains(PERIMETRO_STORE)) {
+        const store = db.createObjectStore(PERIMETRO_STORE, { keyPath: 'id' })
         store.createIndex('timestamp', 'timestamp', { unique: false })
         store.createIndex('version', 'version', { unique: false })
       }
@@ -129,7 +137,7 @@ async function decompressData(data) {
  * Limpia entradas expiradas de IndexedDB
  */
 export async function cleanExpiredCache(maxAgeHours = 24, storeName = null) {
-  const storesToClean = storeName ? [storeName] : [BOSQUES_STORE, POTREROS_STORE]
+  const storesToClean = storeName ? [storeName] : [BOSQUES_STORE, POTREROS_STORE, PERIMETRO_STORE]
 
   for (const store of storesToClean) {
     try {
@@ -166,7 +174,7 @@ export async function cleanExpiredCache(maxAgeHours = 24, storeName = null) {
  * Obtiene estadísticas del caché
  */
 export async function getCacheStats(storeName = null) {
-  const storesToCheck = storeName ? [storeName] : [BOSQUES_STORE, POTREROS_STORE]
+  const storesToCheck = storeName ? [storeName] : [BOSQUES_STORE, POTREROS_STORE, PERIMETRO_STORE]
   const allStats = {}
 
   for (const store of storesToCheck) {
@@ -255,4 +263,4 @@ if (typeof window !== 'undefined') {
 }
 
 // Exportar constantes para uso en otros módulos
-export { BOSQUES_STORE, POTREROS_STORE }
+export { BOSQUES_STORE, POTREROS_STORE, PERIMETRO_STORE }
