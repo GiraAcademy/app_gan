@@ -46,20 +46,20 @@ const vectorLayers = ref([
     requiresAPI: true // Indica que esta capa necesita cargar datos de API
   },
   {
-    id: 'perimetro',
-    name: 'Perímetro',
-    icon: '🟥',
-    enabled: true,
-    description: 'Límites del perímetro cargados desde API',
-    hasAttributes: true,
-    requiresAPI: true // Indica que esta capa necesita cargar datos de API
-  },
-  {
     id: 'bosques',
     name: 'Bosques',
     icon: '🌲',
     enabled: true,
     description: 'Áreas boscosas cargadas desde API',
+    hasAttributes: true,
+    requiresAPI: true // Indica que esta capa necesita cargar datos de API
+  },
+  {
+    id: 'perimetro',
+    name: 'Perímetro',
+    icon: '🟥',
+    enabled: true,
+    description: 'Límites del perímetro cargados desde API',
     hasAttributes: true,
     requiresAPI: true // Indica que esta capa necesita cargar datos de API
   }
