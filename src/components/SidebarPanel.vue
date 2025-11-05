@@ -30,11 +30,11 @@ console.log('SidebarPanel mounted, isOpen:', props.isOpen)
 const sidebarClasses = computed(() => {
   const baseClasses = 'bg-white flex flex-col h-full transition-all duration-300 ease-in-out'
   
-  // Desktop: always visible
-  const desktopClasses = 'lg:block'
+  // Desktop: always visible and full width
+  const desktopClasses = 'lg:block lg:w-80'
   
-  // Mobile: conditional width and visibility
-  const mobileClasses = props.sidebarOpen ? 'block' : 'w-0 overflow-hidden'
+  // Mobile: conditional width and visibility (only apply on smaller screens)
+  const mobileClasses = props.sidebarOpen ? 'md:block md:w-80' : 'md:w-0 md:overflow-hidden'
   
   return `${baseClasses} ${desktopClasses} ${mobileClasses}`
 })
