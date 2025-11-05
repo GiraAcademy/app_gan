@@ -72,7 +72,7 @@ export function createPotreroPopupContent(potreroData, variant = 'default') {
           </div>
         </div>
 
-        <div class="mt-3 pie-chart-container" style="width: 100%; height: 150px; position: relative; display: flex; align-items: center; justify-content: center;">
+        <div class="mt-3 pie-chart-container" style="width: 100%; height: 150px; position: relative;">
           <!-- Aquí se insertará el gráfico de torta dinámicamente -->
         </div>
       </div>

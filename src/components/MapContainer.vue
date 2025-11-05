@@ -77,101 +77,133 @@ let perimetroLayer = null
 let bosquesLayer = null
 let highlightLayer = null
 let activeChart = null
+let potrerosLayersMap = new Map() // Mapa de id -> layer para actualizar popups
 
 // Función para limpiar el gráfico anterior
 function destroyActiveChart() {
   if (activeChart) {
+    console.log('🗑️ Destruyendo gráfico anterior')
     try {
       activeChart.destroy()
       activeChart = null
     } catch (error) {
-      console.error('Error al destruir gráfico anterior:', error)
+      console.error('❌ Error al destruir gráfico anterior:', error)
     }
   }
 }
 
 // Función para crear gráfico de torta en el popup
 function createPopupChart(properties) {
-  let popupElement = document.querySelector('.leaflet-popup-content')
-  if (!popupElement) {
-    setTimeout(() => createPopupChart(properties), 100)
-    return
-  }
+  console.log('🎨 Creando gráfico para potrero:', properties?.nombre, 'con propiedades:', properties)
 
-  let chartContainer = popupElement.querySelector('.pie-chart-container')
-  if (!chartContainer) {
-    setTimeout(() => createPopupChart(properties), 100)
-    return
-  }
+  const maxAttempts = 50 // Máximo 50 intentos (aprox 1 segundo a 60fps)
+  let attempts = 0
 
-  const bosquesHa = properties?.bosques_ha || 0
-  const lagunaHa = properties?.laguna_ha || 0
-  const pecuariHa = properties?.pecuari_ha || 0
-  const total = bosquesHa + lagunaHa + pecuariHa
+  function tryCreateChart() {
+    attempts++
 
-  if (total === 0) {
-    chartContainer.innerHTML = '<p class="text-xs text-gray-500 text-center py-4">Sin datos disponibles</p>'
-    return
-  }
+    let popupElement = document.querySelector('.leaflet-popup-content')
+    if (!popupElement) {
+      if (attempts < maxAttempts) {
+        requestAnimationFrame(tryCreateChart)
+      } else {
+        console.error('❌ No se pudo encontrar .leaflet-popup-content después de', maxAttempts, 'intentos')
+      }
+      return
+    }
 
-  chartContainer.innerHTML = ''
-  const canvasId = `pie-chart-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-  const canvas = document.createElement('canvas')
-  canvas.id = canvasId
-  canvas.width = chartContainer.offsetWidth || 300
-  canvas.height = 150
-  chartContainer.appendChild(canvas)
+    let chartContainer = popupElement.querySelector('.pie-chart-container')
+    if (!chartContainer) {
+      if (attempts < maxAttempts) {
+        requestAnimationFrame(tryCreateChart)
+      } else {
+        console.error('❌ No se pudo encontrar .pie-chart-container después de', maxAttempts, 'intentos')
+      }
+      return
+    }
 
-  const ctx = canvas.getContext('2d')
-  if (!ctx) {
-    console.error('Unable to get 2D context from canvas')
-    chartContainer.innerHTML = '<p class="text-xs text-red-500 text-center py-4">Error al renderizar gráfico</p>'
-    return
-  }
+    console.log('✅ Contenedor del gráfico encontrado, creando gráfico...')
 
-  const chartData = createLandUseChartData(properties)
+    const bosquesHa = properties?.bosques_ha || 0
+    const lagunaHa = properties?.laguna_ha || 0
+    const pecuariHa = properties?.pecuari_ha || 0
+    const total = bosquesHa + lagunaHa + pecuariHa
 
-  try {
-    destroyActiveChart()
-    activeChart = new ChartJS(ctx, {
-      type: 'pie',
-      data: chartData,
-      options: {
-        responsive: false,
-        maintainAspectRatio: false,
-        layout: { padding: 10 },
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: {
-              font: { size: 11 },
-              padding: 12,
-              usePointStyle: true,
-              boxHeight: 8
-            }
-          },
-          tooltip: {
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            padding: 10,
-            titleFont: { size: 12 },
-            bodyFont: { size: 11 },
-            callbacks: {
-              label: function(context) {
-                const label = context.label || ''
-                const value = context.parsed || 0
-                const total = context.dataset.data.reduce((a, b) => a + b, 0)
-                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0
-                return `${label}: ${value.toFixed(2)} ha (${percentage}%)`
+    console.log('📊 Datos del gráfico:', { bosquesHa, lagunaHa, pecuariHa, total })
+
+    if (total === 0) {
+      console.log('⚠️ Sin datos para el gráfico, mostrando mensaje')
+      chartContainer.innerHTML = '<p class="text-xs text-gray-500 text-center py-4">Sin datos disponibles</p>'
+      return
+    }
+
+    chartContainer.innerHTML = ''
+    const canvasId = `pie-chart-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    const canvas = document.createElement('canvas')
+    canvas.id = canvasId
+    canvas.style.width = '100%'
+    canvas.style.height = '100%'
+    canvas.width = chartContainer.offsetWidth || 300
+    canvas.height = 150
+    chartContainer.appendChild(canvas)
+
+    console.log('🎨 Canvas creado:', canvasId, 'tamaño:', canvas.width, 'x', canvas.height)
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) {
+      console.error('❌ Unable to get 2D context from canvas')
+      chartContainer.innerHTML = '<p class="text-xs text-red-500 text-center py-4">Error al renderizar gráfico</p>'
+      return
+    }
+
+    const chartData = createLandUseChartData(properties)
+    console.log('📈 Datos para Chart.js:', chartData)
+
+    try {
+      destroyActiveChart()
+      activeChart = new ChartJS(ctx, {
+        type: 'pie',
+        data: chartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: 10 },
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                font: { size: 11 },
+                padding: 12,
+                usePointStyle: true,
+                boxHeight: 8
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              padding: 10,
+              titleFont: { size: 12 },
+              bodyFont: { size: 11 },
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || ''
+                  const value = context.parsed || 0
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                  const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0
+                  return `${label}: ${value.toFixed(2)} ha (${percentage}%)`
+                }
               }
             }
           }
         }
-      }
-    })
-  } catch (error) {
-    console.error('Error al crear gráfico:', error)
-    chartContainer.innerHTML = '<p class="text-xs text-red-500 text-center py-4">Error al renderizar gráfico</p>'
+      })
+      console.log('✅ Gráfico creado exitosamente')
+    } catch (error) {
+      console.error('❌ Error al crear gráfico:', error)
+      chartContainer.innerHTML = '<p class="text-xs text-red-500 text-center py-4">Error al renderizar gráfico</p>'
+    }
   }
+
+  tryCreateChart()
 }
 
 // Usar composable para manejar la capa de potreros
@@ -188,15 +220,26 @@ const {
   onEachFeature: (feature, layer) => {
     if (!feature.properties) return
 
+    // Guardar referencia a la layer por id
+    const potreroId = feature.properties?.id
+    if (potreroId) {
+      potrerosLayersMap.set(potreroId, layer)
+    }
+
+    // Determinar si está seleccionado
+    const isSelected = props.selectedPotrero?.id === potreroId
+    const variant = isSelected ? 'selected' : 'default'
+
     const popupData = extractPotreroPopupData(feature.properties)
     const popupContent = createPotreroPopupContent({
       ...popupData,
       properties: feature.properties
-    }, 'default')
+    }, variant)
 
-    layer.bindPopup(popupContent, potreroPopupOptions.default)
+    layer.bindPopup(popupContent, potreroPopupOptions[variant])
 
     layer.on('popupopen', (e) => {
+      console.log('📂 Popup abierto para potrero:', feature.properties?.nombre)
       destroyActiveChart()
       setTimeout(() => {
         createPopupChart(feature.properties)
@@ -301,6 +344,9 @@ watch(bosquesGeoJSON, (data) => {
 onMounted(async () => {
   await Promise.all([loadPotreros(), loadPerimetro()])
 
+  // Limpiar mapa de capas anteriores
+  potrerosLayersMap.clear()
+
   mapInstance.value = initializeMap({
     container: mapContainer.value,
     center: initialMapConfig.center,
@@ -349,8 +395,48 @@ watch(() => props.layers, (newLayers) => {
 }, { deep: true })
 
 // Watch para selección de potrero
-watch(() => props.selectedPotrero, (potreroData) => {
+watch(() => props.selectedPotrero, (potreroData, oldPotreroData) => {
   if (!mapInstance.value) return
+
+  // Actualizar popup del potrero previamente seleccionado
+  if (oldPotreroData?.id && potrerosLayersMap.has(oldPotreroData.id)) {
+    const oldLayer = potrerosLayersMap.get(oldPotreroData.id)
+    const popupData = extractPotreroPopupData(oldLayer.feature.properties)
+    const popupContent = createPotreroPopupContent({
+      ...popupData,
+      properties: oldLayer.feature.properties
+    }, 'default')
+    oldLayer.setPopupContent(popupContent)
+    oldLayer.options.popupOptions = potreroPopupOptions.default
+    
+    // Si el popup está abierto, actualizar el gráfico
+    if (mapInstance.value.hasLayer(oldLayer) && oldLayer.getPopup() && oldLayer.getPopup().isOpen()) {
+      console.log('🔄 Actualizando gráfico para popup abierto (deselección)')
+      setTimeout(() => createPopupChart(oldLayer.feature.properties), 100)
+    }
+  }
+
+  // Actualizar popup del potrero actualmente seleccionado
+  if (potreroData?.id && potrerosLayersMap.has(potreroData.id)) {
+    const newLayer = potrerosLayersMap.get(potreroData.id)
+    const popupData = extractPotreroPopupData(newLayer.feature.properties)
+    const popupContent = createPotreroPopupContent({
+      ...popupData,
+      properties: newLayer.feature.properties
+    }, 'selected')
+    newLayer.setPopupContent(popupContent)
+    newLayer.options.popupOptions = potreroPopupOptions.selected
+    
+    // Si el popup está abierto, actualizar el gráfico
+    if (mapInstance.value.hasLayer(newLayer) && newLayer.getPopup() && newLayer.getPopup().isOpen()) {
+      console.log('🔄 Actualizando gráfico para popup abierto (selección)')
+      setTimeout(() => createPopupChart(newLayer.feature.properties), 100)
+    } else {
+      // Si el popup no está abierto, abrirlo automáticamente
+      newLayer.openPopup()
+      console.log('📢 Popup abierto programáticamente para potrero filtrado')
+    }
+  }
 
   if (potreroData && potreroData.geometry) {
     highlightLayer = highlightPotrero({
@@ -376,6 +462,24 @@ watch(() => props.selectedPotrero, (potreroData) => {
 // Exponer métodos públicos
 defineExpose({
   clearSelection() {
+    // Resetear popup del potrero seleccionado
+    if (props.selectedPotrero?.id && potrerosLayersMap.has(props.selectedPotrero.id)) {
+      const layer = potrerosLayersMap.get(props.selectedPotrero.id)
+      const popupData = extractPotreroPopupData(layer.feature.properties)
+      const popupContent = createPotreroPopupContent({
+        ...popupData,
+        properties: layer.feature.properties
+      }, 'default')
+      layer.setPopupContent(popupContent)
+      layer.options.popupOptions = potreroPopupOptions.default
+      
+      // Si el popup está abierto, actualizar el gráfico
+      if (mapInstance.value.hasLayer(layer) && layer.getPopup() && layer.getPopup().isOpen()) {
+        console.log('🔄 Actualizando gráfico para popup abierto (clear selection)')
+        setTimeout(() => createPopupChart(layer.feature.properties), 100)
+      }
+    }
+
     if (mapInstance.value && highlightLayer) {
       clearHighlight({ map: mapInstance.value, highlightLayer })
       highlightLayer = null
