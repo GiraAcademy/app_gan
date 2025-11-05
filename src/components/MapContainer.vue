@@ -18,30 +18,45 @@ import {
   createLandUseChartData
 } from '@/components/map/popupHelpers'
 import { extractPotreroPopupData } from '@/utils/potreroDataHelpers'
-import { 
-  potreroDefaultStyle, 
-  perimetroDefaultStyle, 
+import {
+  potreroDefaultStyle,
+  perimetroDefaultStyle,
   bosquesDefaultStyle,
   getBosquesStyle
 } from '@/components/map/layerStyles'
 import { logBosquesCacheInfo } from '@/utils/cacheUtils'
-import { 
+import {
   createSatelliteLayer,
   initialMapConfig
 } from '@/components/map/baseLayersConfig'
-import { 
+import {
   highlightPotrero,
   clearHighlight
 } from '@/components/map/highlightHelpers'
-import { 
+import {
   fitMapToBounds,
   toggleLayer,
   initializeMap
 } from '@/components/map/mapUtils'
 import MapCoordinatesScale from '@/components/map/MapCoordinatesScale.vue'
+import casaIcon from '@/assets/casa.png'
 
 // Registrar elementos de Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, PieController)
+
+// Función para volver a la vista inicial del mapa
+function goHome() {
+  if (mapInstance.value && potrerosGeoJSON.value) {
+    console.log('Volviendo a vista inicial del mapa')
+    fitMapToBounds({
+      map: mapInstance.value,
+      getBounds,
+      geoJSONData: potrerosGeoJSON.value
+    })
+  } else {
+    console.log('No se puede volver a vista inicial: mapa o datos no disponibles')
+  }
+}
 
 const props = defineProps({
   layers: Object,
@@ -54,14 +69,14 @@ const props = defineProps({
 const emit = defineEmits(['updateLoading', 'updateError', 'updatePotrerosData', 'updatePerimetroData', 'updateBosquesData'])
 
 const mapContainer = ref(null)
-const mapInstance = ref(null) // Ref reactivo para el mapa
+const mapInstance = ref(null)
 
 let satelliteLayer = null
 let potrerosLayer = null
 let perimetroLayer = null
 let bosquesLayer = null
-let highlightLayer = null // Capa para resaltar el potrero seleccionado
-let activeChart = null // Referencia al gráfico activo
+let highlightLayer = null
+let activeChart = null
 
 // Función para limpiar el gráfico anterior
 function destroyActiveChart() {
@@ -77,78 +92,59 @@ function destroyActiveChart() {
 
 // Función para crear gráfico de torta en el popup
 function createPopupChart(properties) {
-  // Buscar el contenedor del gráfico en el popup abierto (actual)
   let popupElement = document.querySelector('.leaflet-popup-content')
   if (!popupElement) {
-    console.warn('No popup element found - retrying')
-    // Reintentar después de un delay adicional
     setTimeout(() => createPopupChart(properties), 100)
     return
   }
-  
+
   let chartContainer = popupElement.querySelector('.pie-chart-container')
   if (!chartContainer) {
-    console.warn('No chart container found in popup - retrying')
-    // Reintentar después de un delay adicional
     setTimeout(() => createPopupChart(properties), 100)
     return
   }
-  
-  // Validar que existan datos de uso del suelo
+
   const bosquesHa = properties?.bosques_ha || 0
   const lagunaHa = properties?.laguna_ha || 0
   const pecuariHa = properties?.pecuari_ha || 0
   const total = bosquesHa + lagunaHa + pecuariHa
-  
-  // Si no hay datos, mostrar mensaje
+
   if (total === 0) {
     chartContainer.innerHTML = '<p class="text-xs text-gray-500 text-center py-4">Sin datos disponibles</p>'
     return
   }
-  
-  // Limpiar contenedor completamente - Esto es crítico para el segundo popup
+
   chartContainer.innerHTML = ''
-  
-  // Crear canvas con id único basado en timestamp
   const canvasId = `pie-chart-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
   const canvas = document.createElement('canvas')
   canvas.id = canvasId
   canvas.width = chartContainer.offsetWidth || 300
   canvas.height = 150
   chartContainer.appendChild(canvas)
-  
-  // Obtener contexto inmediatamente
+
   const ctx = canvas.getContext('2d')
   if (!ctx) {
     console.error('Unable to get 2D context from canvas')
     chartContainer.innerHTML = '<p class="text-xs text-red-500 text-center py-4">Error al renderizar gráfico</p>'
     return
   }
-  
-  // Crear datos del gráfico
+
   const chartData = createLandUseChartData(properties)
-  
+
   try {
-    // Destruir gráfico anterior si existe
     destroyActiveChart()
-    
-    // Crear nueva instancia del gráfico y guardar referencia
     activeChart = new ChartJS(ctx, {
       type: 'pie',
       data: chartData,
       options: {
         responsive: false,
         maintainAspectRatio: false,
-        layout: {
-          padding: 10
-        },
+        layout: { padding: 10 },
         plugins: {
           legend: {
             position: 'bottom',
             labels: {
-              font: {
-                size: 11
-              },
+              font: { size: 11 },
               padding: 12,
               usePointStyle: true,
               boxHeight: 8
@@ -191,31 +187,22 @@ const {
   styleFunction: () => potreroDefaultStyle,
   onEachFeature: (feature, layer) => {
     if (!feature.properties) return
-    
-    // Extraer datos del potrero usando helper reutilizable
+
     const popupData = extractPotreroPopupData(feature.properties)
-    
-    // Crear popup con gráfico
     const popupContent = createPotreroPopupContent({
       ...popupData,
       properties: feature.properties
     }, 'default')
-    
+
     layer.bindPopup(popupContent, potreroPopupOptions.default)
-    
-    // Agregar evento para crear el gráfico cuando se abre el popup
+
     layer.on('popupopen', (e) => {
-      // Destruir gráfico anterior si existe (por si se abre otro popup sin cerrar)
       destroyActiveChart()
-      
-      // Crear nuevo gráfico con delay aumentado para asegurar que el DOM esté listo
-      // Aumentamos a 300ms porque Leaflet puede tardar más en actualizar el popup
       setTimeout(() => {
         createPopupChart(feature.properties)
       }, 300)
     })
-    
-    // Agregar evento para limpiar el gráfico cuando se cierra el popup
+
     layer.on('popupclose', () => {
       destroyActiveChart()
     })
@@ -234,8 +221,7 @@ const {
   fetchData: fetchPerimetro,
   styleFunction: () => perimetroDefaultStyle,
   onEachFeature: (feature, layer) => {
-    // Perímetro podría tener popup si es necesario
-    // Por ahora, sin popup
+    // Sin popup por ahora
   }
 })
 
@@ -251,71 +237,60 @@ const {
   fetchData: fetchBosques,
   styleFunction: getBosquesStyle,
   onEachFeature: (feature, layer) => {
-    // Bosques podría tener popup si es necesario
-    // Por ahora, sin popup
+    // Sin popup por ahora
   }
 })
 
-// Watch para emitir cambios en el estado de carga
+// Estado para controlar si bosques ya se cargó (lazy loading)
+const bosquesLoaded = ref(false)
+
+// Watchers para emitir eventos
 watch(isLoading, (loading) => {
   emit('updateLoading', 'potreros', loading)
 })
 
-// Watch para emitir errores
 watch(error, (err) => {
   emit('updateError', 'potreros', err)
 })
 
-// Watch para emitir datos de potreros al chatbot
 watch(potrerosGeoJSON, (data) => {
   if (data) {
     emit('updatePotrerosData', data)
   }
 })
 
-// Watch para emitir cambios en el estado de carga del perímetro
 watch(perimetroLoading, (loading) => {
   emit('updateLoading', 'perimetro', loading)
 })
 
-// Watch para emitir errores del perímetro
 watch(perimetroError, (err) => {
   emit('updateError', 'perimetro', err)
 })
 
-// Watch para emitir datos de perímetro
 watch(perimetroGeoJSON, (data) => {
   if (data) {
     emit('updatePerimetroData', data)
   }
 })
 
-// Watch para emitir cambios en el estado de carga de bosques
 watch(bosquesLoading, (loading) => {
   emit('updateLoading', 'bosques', loading)
 })
 
-// Watch para emitir errores de bosques
 watch(bosquesError, (err) => {
   emit('updateError', 'bosques', err)
 })
 
-// Watch para emitir datos de bosques
 watch(bosquesGeoJSON, (data) => {
   if (data) {
     emit('updateBosquesData', data)
-    // Mostrar información del caché en consola
     logBosquesCacheInfo()
-    
-    // Recrear la capa de bosques si el mapa ya está inicializado
+
     if (mapInstance.value && bosquesLayer) {
-      // Remover la capa anterior si existe
       if (mapInstance.value.hasLayer(bosquesLayer)) {
         mapInstance.value.removeLayer(bosquesLayer)
       }
-      // Crear nueva capa con los datos
       bosquesLayer = createBosquesLayer(data)
-      // Agregar al mapa si la capa está activada
       if (props.layers.bosques) {
         mapInstance.value.addLayer(bosquesLayer)
       }
@@ -323,14 +298,9 @@ watch(bosquesGeoJSON, (data) => {
   }
 })
 
-// Estado para controlar si bosques ya se cargó (lazy loading)
-const bosquesLoaded = ref(false)
-
 onMounted(async () => {
-  // Cargar datos de potreros y perímetro en paralelo (bosques se carga on-demand)
   await Promise.all([loadPotreros(), loadPerimetro()])
 
-  // Inicializar mapa con configuración estándar
   mapInstance.value = initializeMap({
     container: mapContainer.value,
     center: initialMapConfig.center,
@@ -338,212 +308,51 @@ onMounted(async () => {
     L
   })
 
-  // Crear capa satelital
   satelliteLayer = createSatelliteLayer(L)
-
-  // Crear capa de potreros desde GeoJSON
-  potrerosLayer = potrerosGeoJSON.value 
+  potrerosLayer = potrerosGeoJSON.value
     ? createLayer(potrerosGeoJSON.value)
     : L.layerGroup()
-
-  // Crear capa de perímetro desde GeoJSON
-  perimetroLayer = perimetroGeoJSON.value 
+  perimetroLayer = perimetroGeoJSON.value
     ? createPerimetroLayer(perimetroGeoJSON.value)
     : L.layerGroup()
-
-  // Crear capa de bosques desde GeoJSON
-  bosquesLayer = bosquesGeoJSON.value 
+  bosquesLayer = bosquesGeoJSON.value
     ? createBosquesLayer(bosquesGeoJSON.value)
     : L.layerGroup()
 
-  // Ajustar el mapa a los límites de los potreros (prioridad)
   if (potrerosGeoJSON.value) {
-    fitMapToBounds({ 
-      map: mapInstance.value, 
-      getBounds, 
-      geoJSONData: potrerosGeoJSON.value 
+    fitMapToBounds({
+      map: mapInstance.value,
+      getBounds,
+      geoJSONData: potrerosGeoJSON.value
     })
   }
 
-  // Agregar capas iniciales según props
-  if (props.layers?.satellite) {
-    satelliteLayer.addTo(mapInstance.value)
-  }
-  if (props.layers?.perimetro) {
-    perimetroLayer.addTo(mapInstance.value)
-  }
-  if (props.layers?.bosques) {
-    bosquesLayer.addTo(mapInstance.value)
-  }
-  if (props.layers?.potreros) {
-    potrerosLayer.addTo(mapInstance.value)
-  }
+  if (props.layers?.satellite) satelliteLayer.addTo(mapInstance.value)
+  if (props.layers?.perimetro) perimetroLayer.addTo(mapInstance.value)
+  if (props.layers?.bosques) bosquesLayer.addTo(mapInstance.value)
+  if (props.layers?.potreros) potrerosLayer.addTo(mapInstance.value)
 })
 
 // Watch para cambios en las capas
 watch(() => props.layers, (newLayers) => {
   if (!mapInstance.value) return
 
-  // Capa Satelite
-  toggleLayer({
-    map: mapInstance.value,
-    layer: satelliteLayer,
-    shouldShow: newLayers.satellite
-  })
+  toggleLayer({ map: mapInstance.value, layer: satelliteLayer, shouldShow: newLayers.satellite })
+  toggleLayer({ map: mapInstance.value, layer: perimetroLayer, shouldShow: newLayers.perimetro })
+  toggleLayer({ map: mapInstance.value, layer: potrerosLayer, shouldShow: newLayers.potreros })
 
-  // Capa Perímetro
-  toggleLayer({
-    map: mapInstance.value,
-    layer: perimetroLayer,
-    shouldShow: newLayers.perimetro
-  })
-
-  // Capa Potreros
-  toggleLayer({
-    map: mapInstance.value,
-    layer: potrerosLayer,
-    shouldShow: newLayers.potreros
-  })
-
-  // Capa Bosques (lazy loading)
   if (newLayers.bosques && !bosquesLoaded.value) {
-    // Cargar bosques solo cuando se activa por primera vez
     bosquesLoaded.value = true
     loadBosques()
   }
-  toggleLayer({
-    map: mapInstance.value,
-    layer: bosquesLayer,
-    shouldShow: newLayers.bosques
-  })
+  toggleLayer({ map: mapInstance.value, layer: bosquesLayer, shouldShow: newLayers.bosques })
 }, { deep: true })
 
-// Watch para recargar potreros si cambian los datos
-watch(potrerosGeoJSON, (newData) => {
-  if (!mapInstance.value || !newData) return
-
-  // Remover la capa antigua
-  if (potrerosLayer && mapInstance.value.hasLayer(potrerosLayer)) {
-    mapInstance.value.removeLayer(potrerosLayer)
-  }
-
-  // Crear nueva capa usando el composable
-  potrerosLayer = createLayer(newData)
-
-  // Reordenar capas para mantener el orden correcto: perímetro, bosques, potreros
-  if (perimetroLayer && mapInstance.value.hasLayer(perimetroLayer)) {
-    mapInstance.value.removeLayer(perimetroLayer)
-  }
-  if (bosquesLayer && mapInstance.value.hasLayer(bosquesLayer)) {
-    mapInstance.value.removeLayer(bosquesLayer)
-  }
-  if (potrerosLayer && props.layers?.potreros) {
-    mapInstance.value.removeLayer(potrerosLayer)
-  }
-  
-  // Agregar en orden correcto: perímetro primero, luego bosques, luego potreros
-  if (props.layers?.perimetro && perimetroLayer) {
-    perimetroLayer.addTo(mapInstance.value)
-  }
-  if (props.layers?.bosques && bosquesLayer) {
-    bosquesLayer.addTo(mapInstance.value)
-  }
-  if (props.layers?.potreros && potrerosLayer) {
-    potrerosLayer.addTo(mapInstance.value)
-  }
-
-  // Ajustar vista
-  fitMapToBounds({ 
-    map: mapInstance.value, 
-    getBounds, 
-    geoJSONData: newData 
-  })
-})
-
-// Watch para recargar perímetro si cambian los datos
-watch(perimetroGeoJSON, (newData) => {
-  if (!mapInstance.value) return
-
-  // Remover la capa antigua
-  if (perimetroLayer && mapInstance.value.hasLayer(perimetroLayer)) {
-    mapInstance.value.removeLayer(perimetroLayer)
-  }
-
-  // Crear nueva capa usando el composable
-  if (newData) {
-    perimetroLayer = createPerimetroLayer(newData)
-  } else {
-    perimetroLayer = L.layerGroup()
-  }
-
-  // Reordenar capas para mantener el orden correcto: perímetro, bosques, potreros
-  if (perimetroLayer && mapInstance.value.hasLayer(perimetroLayer)) {
-    mapInstance.value.removeLayer(perimetroLayer)
-  }
-  if (bosquesLayer && mapInstance.value.hasLayer(bosquesLayer)) {
-    mapInstance.value.removeLayer(bosquesLayer)
-  }
-  if (potrerosLayer && mapInstance.value.hasLayer(potrerosLayer)) {
-    mapInstance.value.removeLayer(potrerosLayer)
-  }
-  
-  // Agregar en orden correcto: perímetro primero, luego bosques, luego potreros
-  if (props.layers?.perimetro && perimetroLayer) {
-    perimetroLayer.addTo(mapInstance.value)
-  }
-  if (props.layers?.bosques && bosquesLayer) {
-    bosquesLayer.addTo(mapInstance.value)
-  }
-  if (props.layers?.potreros && potrerosLayer) {
-    potrerosLayer.addTo(mapInstance.value)
-  }
-})
-
-// Watch para recargar bosques si cambian los datos
-watch(bosquesGeoJSON, (newData) => {
-  if (!mapInstance.value) return
-
-  // Remover la capa antigua
-  if (bosquesLayer && mapInstance.value.hasLayer(bosquesLayer)) {
-    mapInstance.value.removeLayer(bosquesLayer)
-  }
-
-  // Crear nueva capa usando el composable
-  if (newData) {
-    bosquesLayer = createBosquesLayer(newData)
-  } else {
-    bosquesLayer = L.layerGroup()
-  }
-
-  // Reordenar capas para mantener el orden correcto: perímetro, bosques, potreros
-  if (perimetroLayer && mapInstance.value.hasLayer(perimetroLayer)) {
-    mapInstance.value.removeLayer(perimetroLayer)
-  }
-  if (bosquesLayer && mapInstance.value.hasLayer(bosquesLayer)) {
-    mapInstance.value.removeLayer(bosquesLayer)
-  }
-  if (potrerosLayer && mapInstance.value.hasLayer(potrerosLayer)) {
-    mapInstance.value.removeLayer(potrerosLayer)
-  }
-  
-  // Agregar en orden correcto: perímetro primero, luego bosques, luego potreros
-  if (props.layers?.perimetro && perimetroLayer) {
-    perimetroLayer.addTo(mapInstance.value)
-  }
-  if (props.layers?.bosques && bosquesLayer) {
-    bosquesLayer.addTo(mapInstance.value)
-  }
-  if (props.layers?.potreros && potrerosLayer) {
-    potrerosLayer.addTo(mapInstance.value)
-  }
-})
-
-// Watch para manejar la selección de potrero
+// Watch para selección de potrero
 watch(() => props.selectedPotrero, (potreroData) => {
   if (!mapInstance.value) return
 
   if (potreroData && potreroData.geometry) {
-    // Crear y mostrar resaltado
     highlightLayer = highlightPotrero({
       map: mapInstance.value,
       potreroData,
@@ -551,35 +360,43 @@ watch(() => props.selectedPotrero, (potreroData) => {
       L
     })
   } else {
-    // Limpiar resaltado y volver a vista general
     clearHighlight({ map: mapInstance.value, highlightLayer })
     highlightLayer = null
-    
+
     if (potrerosGeoJSON.value) {
-      fitMapToBounds({ 
-        map: mapInstance.value, 
-        getBounds, 
-        geoJSONData: potrerosGeoJSON.value 
+      fitMapToBounds({
+        map: mapInstance.value,
+        getBounds,
+        geoJSONData: potrerosGeoJSON.value
       })
     }
   }
 }, { deep: true })
 
-// Exponer métodos públicos para control externo
+// Exponer métodos públicos
 defineExpose({
   clearSelection() {
     if (mapInstance.value && highlightLayer) {
       clearHighlight({ map: mapInstance.value, highlightLayer })
       highlightLayer = null
-      
-      // Volver a vista general
+
       if (potrerosGeoJSON.value) {
-        fitMapToBounds({ 
-          map: mapInstance.value, 
-          getBounds, 
-          geoJSONData: potrerosGeoJSON.value 
+        fitMapToBounds({
+          map: mapInstance.value,
+          getBounds,
+          geoJSONData: potrerosGeoJSON.value
         })
       }
+    }
+  },
+
+  goHome() {
+    if (mapInstance.value && potrerosGeoJSON.value) {
+      fitMapToBounds({
+        map: mapInstance.value,
+        getBounds,
+        geoJSONData: potrerosGeoJSON.value
+      })
     }
   }
 })
@@ -588,8 +405,16 @@ defineExpose({
 <template>
   <div class="w-full h-full relative">
     <div ref="mapContainer" class="w-full h-full"></div>
-    
-    <!-- Componente de coordenadas y escala -->
     <MapCoordinatesScale v-if="mapInstance" :map="mapInstance" />
+    <button
+      v-if="mapInstance && potrerosGeoJSON"
+      @click="goHome"
+      class="absolute z-[1000] bg-white hover:bg-gray-100 border-2 border-[rgba(0,0,0,0.2)] rounded flex items-center justify-center transition-colors cursor-pointer"
+      style="top: 90px; left: 11px; width: 36px; height: 36px; box-shadow: 0 1px 5px rgba(0,0,0,0.65);"
+      title="Volver a vista inicial"
+      aria-label="Volver a vista inicial del mapa"
+    >
+      <img :src="casaIcon" alt="Home" class="w-5 h-5" />
+    </button>
   </div>
 </template>
