@@ -35,8 +35,8 @@ function handleSelectPotrero(potreroData) {
   emit('selectPotrero', potreroData)
 }
 
-function handleToggleAttributeTable() {
-  emit('toggleAttributeTable')
+function handleToggleAttributeTable(layerType) {
+  emit('toggleAttributeTable', layerType)
 }
 </script>
 

@@ -17,7 +17,8 @@ const props = defineProps({
     type: Object,
     default: () => ({
       satellite: true,
-      potreros: true
+      potreros: true,
+      perimetro: true
     })
   }
 })
@@ -40,6 +41,15 @@ const vectorLayers = ref([
     icon: '🟩',
     enabled: true,
     description: 'Polígonos de potreros cargados desde API',
+    hasAttributes: true,
+    requiresAPI: true // Indica que esta capa necesita cargar datos de API
+  },
+  {
+    id: 'perimetro',
+    name: 'Perímetro',
+    icon: '🟥',
+    enabled: true,
+    description: 'Límites del perímetro cargados desde API',
     hasAttributes: true,
     requiresAPI: true // Indica que esta capa necesita cargar datos de API
   }
@@ -92,7 +102,7 @@ function toggleLayer(layerId) {
 }
 
 function showLayerAttributes(layerId) {
-  emit('toggleAttributeTable')
+  emit('toggleAttributeTable', layerId)
 }
 
 // Helper para verificar si una capa está cargando

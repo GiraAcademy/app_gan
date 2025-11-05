@@ -14,7 +14,8 @@ const currentLayerType = ref('potreros') // Tipo de capa actual para la tabla
 const mapContainerRef = ref(null) // Referencia al componente MapContainer
 const layers = ref({
   satellite: true,
-  potreros: true
+  potreros: true,
+  perimetro: true
 })
 
 // Estado de carga de las capas
@@ -26,6 +27,9 @@ const selectedPotrero = ref(null)
 
 // Datos de potreros (para el chatbot)
 const potrerosData = ref(null)
+
+// Datos de perímetro (para la tabla de atributos)
+const perimetroData = ref(null)
 
 function toggleSidebar() {
   sidebarOpen.value = !sidebarOpen.value
@@ -54,6 +58,11 @@ function updatePotrerosData(data) {
   potrerosData.value = data
 }
 
+// Actualizar datos de perímetro (desde MapContainer)
+function updatePerimetroData(data) {
+  perimetroData.value = data
+}
+
 // Manejar tabla de atributos
 function toggleAttributeTable(layerType = 'potreros') {
   currentLayerType.value = layerType
@@ -67,9 +76,23 @@ const tableConfig = computed(() => {
 
 // Preparar datos para la tabla de atributos
 const tableData = computed(() => {
-  if (!potrerosData.value || !potrerosData.value.features) return []
+  let data = null
   
-  return potrerosData.value.features.map((feature, index) => {
+  // Seleccionar los datos según el tipo de capa actual
+  switch (currentLayerType.value) {
+    case 'potreros':
+      data = potrerosData.value
+      break
+    case 'perimetro':
+      data = perimetroData.value
+      break
+    default:
+      data = potrerosData.value // fallback
+  }
+  
+  if (!data || !data.features) return []
+  
+  return data.features.map((feature, index) => {
     // Obtener el tipo de geometría
     const geometryType = feature.geometry?.type || '-'
     
@@ -108,6 +131,9 @@ const tableColumns = computed(() => {
 
 // Manejar selección desde la tabla
 function handleTableRowSelected(row) {
+  // Solo manejar selección para potreros por ahora
+  if (currentLayerType.value !== 'potreros') return
+  
   // El row.id es el índice + 1 (lo agregamos en tableData)
   const featureIndex = row.id - 1
   
@@ -185,6 +211,7 @@ function handleResetSelection() {
           @update-loading="updateLayerLoadingState"
           @update-error="updateLayerError"
           @update-potreros-data="updatePotrerosData"
+          @update-perimetro-data="updatePerimetroData"
         />
         
         <!-- Chatbot Flotante con datos -->

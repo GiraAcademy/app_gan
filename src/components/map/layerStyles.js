@@ -13,6 +13,17 @@ export const potreroDefaultStyle = {
 }
 
 /**
+ * Estilo para perímetro
+ */
+export const perimetroDefaultStyle = {
+  color: '#FF0000',
+  fillColor: 'transparent',
+  fillOpacity: 0,
+  weight: 3,
+  opacity: 0.8
+}
+
+/**
  * Estilo para potrero seleccionado/resaltado
  */
 export const potreroHighlightStyle = {

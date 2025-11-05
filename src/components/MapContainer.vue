@@ -3,12 +3,13 @@ import { onMounted, ref, watch } from 'vue'
 import L from 'leaflet'
 import { useGeoJSONLayer } from '@/composables/useGeoJSONLayer'
 import { fetchPotreros } from '@/services/potrerosService'
+import { fetchPerimetro } from '@/services/perimetroService'
 import {
   createPotreroPopupContent,
   potreroPopupOptions
 } from '@/components/map/popupHelpers'
 import { extractPotreroPopupData } from '@/utils/potreroDataHelpers'
-import { potreroDefaultStyle } from '@/components/map/layerStyles'
+import { potreroDefaultStyle, perimetroDefaultStyle } from '@/components/map/layerStyles'
 import { 
   createSatelliteLayer,
   initialMapConfig
@@ -32,13 +33,14 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['updateLoading', 'updateError', 'updatePotrerosData'])
+const emit = defineEmits(['updateLoading', 'updateError', 'updatePotrerosData', 'updatePerimetroData'])
 
 const mapContainer = ref(null)
 const mapInstance = ref(null) // Ref reactivo para el mapa
 
 let satelliteLayer = null
 let potrerosLayer = null
+let perimetroLayer = null
 let highlightLayer = null // Capa para resaltar el potrero seleccionado
 
 // Usar composable para manejar la capa de potreros
@@ -64,6 +66,23 @@ const {
   }
 })
 
+// Usar composable para manejar la capa de perímetro
+const {
+  geoJSONData: perimetroGeoJSON,
+  isLoading: perimetroLoading,
+  error: perimetroError,
+  loadData: loadPerimetro,
+  createLayer: createPerimetroLayer,
+  getBounds: getPerimetroBounds
+} = useGeoJSONLayer({
+  fetchData: fetchPerimetro,
+  styleFunction: () => perimetroDefaultStyle,
+  onEachFeature: (feature, layer) => {
+    // Perímetro podría tener popup si es necesario
+    // Por ahora, sin popup
+  }
+})
+
 // Watch para emitir cambios en el estado de carga
 watch(isLoading, (loading) => {
   emit('updateLoading', 'potreros', loading)
@@ -81,9 +100,26 @@ watch(potrerosGeoJSON, (data) => {
   }
 })
 
+// Watch para emitir cambios en el estado de carga del perímetro
+watch(perimetroLoading, (loading) => {
+  emit('updateLoading', 'perimetro', loading)
+})
+
+// Watch para emitir errores del perímetro
+watch(perimetroError, (err) => {
+  emit('updateError', 'perimetro', err)
+})
+
+// Watch para emitir datos de perímetro
+watch(perimetroGeoJSON, (data) => {
+  if (data) {
+    emit('updatePerimetroData', data)
+  }
+})
+
 onMounted(async () => {
-  // Cargar datos de potreros primero
-  await loadPotreros()
+  // Cargar datos de potreros y perímetro en paralelo
+  await Promise.all([loadPotreros(), loadPerimetro()])
 
   // Inicializar mapa con configuración estándar
   mapInstance.value = initializeMap({
@@ -101,7 +137,12 @@ onMounted(async () => {
     ? createLayer(potrerosGeoJSON.value)
     : L.layerGroup()
 
-  // Ajustar el mapa a los límites de los potreros
+  // Crear capa de perímetro desde GeoJSON
+  perimetroLayer = perimetroGeoJSON.value 
+    ? createPerimetroLayer(perimetroGeoJSON.value)
+    : L.layerGroup()
+
+  // Ajustar el mapa a los límites de los potreros (prioridad)
   if (potrerosGeoJSON.value) {
     fitMapToBounds({ 
       map: mapInstance.value, 
@@ -116,6 +157,9 @@ onMounted(async () => {
   }
   if (props.layers?.potreros) {
     potrerosLayer.addTo(mapInstance.value)
+  }
+  if (props.layers?.perimetro) {
+    perimetroLayer.addTo(mapInstance.value)
   }
 })
 
@@ -135,6 +179,13 @@ watch(() => props.layers, (newLayers) => {
     map: mapInstance.value,
     layer: potrerosLayer,
     shouldShow: newLayers.potreros
+  })
+
+  // Capa Perímetro
+  toggleLayer({
+    map: mapInstance.value,
+    layer: perimetroLayer,
+    shouldShow: newLayers.perimetro
   })
 }, { deep: true })
 
@@ -161,6 +212,28 @@ watch(potrerosGeoJSON, (newData) => {
     getBounds, 
     geoJSONData: newData 
   })
+})
+
+// Watch para recargar perímetro si cambian los datos
+watch(perimetroGeoJSON, (newData) => {
+  if (!mapInstance.value) return
+
+  // Remover la capa antigua
+  if (perimetroLayer && mapInstance.value.hasLayer(perimetroLayer)) {
+    mapInstance.value.removeLayer(perimetroLayer)
+  }
+
+  // Crear nueva capa usando el composable
+  if (newData) {
+    perimetroLayer = createPerimetroLayer(newData)
+  } else {
+    perimetroLayer = L.layerGroup()
+  }
+
+  // Agregar si debe estar visible
+  if (props.layers?.perimetro) {
+    perimetroLayer.addTo(mapInstance.value)
+  }
 })
 
 // Watch para manejar la selección de potrero

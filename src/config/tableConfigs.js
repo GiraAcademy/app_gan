@@ -19,6 +19,19 @@ export const potrerosTableConfig = {
 }
 
 /**
+ * Configuración para la capa de Perímetro
+ */
+export const perimetroTableConfig = {
+  layerName: 'Perímetro',
+  panelHeight: 350,
+  minTableWidth: '1200px',
+  searchPlaceholder: 'Buscar perímetro...',
+  rowSelectLabel: 'Clic para seleccionar perímetro en el mapa',
+  // Las columnas se generarán dinámicamente desde los datos de la API
+  columns: []
+}
+
+/**
  * Configuración genérica por defecto para futuras capas
  */
 export const defaultTableConfig = {
@@ -38,7 +51,8 @@ export const defaultTableConfig = {
 export function getTableConfig(layerType = 'potreros') {
   // Mapa de configuraciones disponibles
   const configs = {
-    potreros: potrerosTableConfig
+    potreros: potrerosTableConfig,
+    perimetro: perimetroTableConfig
     // Aquí se pueden agregar más capas en el futuro:
     // suelo: sueloTableConfig,
     // rios: riosTableConfig,
