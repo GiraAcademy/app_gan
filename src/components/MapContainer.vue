@@ -155,11 +155,11 @@ onMounted(async () => {
   if (props.layers?.satellite) {
     satelliteLayer.addTo(mapInstance.value)
   }
-  if (props.layers?.potreros) {
-    potrerosLayer.addTo(mapInstance.value)
-  }
   if (props.layers?.perimetro) {
     perimetroLayer.addTo(mapInstance.value)
+  }
+  if (props.layers?.potreros) {
+    potrerosLayer.addTo(mapInstance.value)
   }
 })
 
@@ -174,18 +174,18 @@ watch(() => props.layers, (newLayers) => {
     shouldShow: newLayers.satellite
   })
 
-  // Capa Potreros
-  toggleLayer({
-    map: mapInstance.value,
-    layer: potrerosLayer,
-    shouldShow: newLayers.potreros
-  })
-
   // Capa Perímetro
   toggleLayer({
     map: mapInstance.value,
     layer: perimetroLayer,
     shouldShow: newLayers.perimetro
+  })
+
+  // Capa Potreros
+  toggleLayer({
+    map: mapInstance.value,
+    layer: potrerosLayer,
+    shouldShow: newLayers.potreros
   })
 }, { deep: true })
 
@@ -201,8 +201,19 @@ watch(potrerosGeoJSON, (newData) => {
   // Crear nueva capa usando el composable
   potrerosLayer = createLayer(newData)
 
-  // Agregar si debe estar visible
-  if (props.layers?.potreros) {
+  // Reordenar capas para mantener perímetro debajo de potreros
+  if (perimetroLayer && mapInstance.value.hasLayer(perimetroLayer)) {
+    mapInstance.value.removeLayer(perimetroLayer)
+  }
+  if (potrerosLayer && props.layers?.potreros) {
+    mapInstance.value.removeLayer(potrerosLayer)
+  }
+  
+  // Agregar en orden correcto: perímetro primero, luego potreros
+  if (props.layers?.perimetro && perimetroLayer) {
+    perimetroLayer.addTo(mapInstance.value)
+  }
+  if (props.layers?.potreros && potrerosLayer) {
     potrerosLayer.addTo(mapInstance.value)
   }
 
@@ -230,9 +241,20 @@ watch(perimetroGeoJSON, (newData) => {
     perimetroLayer = L.layerGroup()
   }
 
-  // Agregar si debe estar visible
-  if (props.layers?.perimetro) {
+  // Reordenar capas para mantener perímetro debajo de potreros
+  if (perimetroLayer && mapInstance.value.hasLayer(perimetroLayer)) {
+    mapInstance.value.removeLayer(perimetroLayer)
+  }
+  if (potrerosLayer && mapInstance.value.hasLayer(potrerosLayer)) {
+    mapInstance.value.removeLayer(potrerosLayer)
+  }
+  
+  // Agregar en orden correcto: perímetro primero, luego potreros
+  if (props.layers?.perimetro && perimetroLayer) {
     perimetroLayer.addTo(mapInstance.value)
+  }
+  if (props.layers?.potreros && potrerosLayer) {
+    potrerosLayer.addTo(mapInstance.value)
   }
 })
 

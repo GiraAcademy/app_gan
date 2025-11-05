@@ -9,7 +9,7 @@ export const potreroDefaultStyle = {
   color: '#00CBA9',
   fillColor: '#00CBA9',
   fillOpacity: 0.25,
-  weight: 2.5
+  weight: 2
 }
 
 /**
@@ -19,7 +19,7 @@ export const perimetroDefaultStyle = {
   color: '#FF0000',
   fillColor: 'transparent',
   fillOpacity: 0,
-  weight: 3,
+  weight: 5,
   opacity: 0.8
 }
 
