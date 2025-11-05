@@ -36,7 +36,9 @@ const perimetroData = ref(null)
 const bosquesData = ref(null)
 
 function toggleSidebar() {
+  console.log('toggleSidebar called, current sidebarOpen:', sidebarOpen.value)
   sidebarOpen.value = !sidebarOpen.value
+  console.log('new sidebarOpen:', sidebarOpen.value)
 }
 
 function handleToggleLayer(layerName, isVisible) {
@@ -206,10 +208,15 @@ function handleResetSelection() {
     <HeaderBar :on-toggle-sidebar="toggleSidebar" />
 
     <!-- Main Content -->
-    <div class="flex flex-1 overflow-hidden relative">
+    <div :class="['h-full relative',
+                  sidebarOpen 
+                    ? 'grid grid-cols-[320px_1fr]' // Sidebar open: 320px sidebar + flexible map
+                    : 'grid grid-cols-[0px_1fr]' // Sidebar closed: 0px sidebar + full map
+                 ]">
       <!-- Sidebar -->
       <SidebarPanel 
         :is-open="sidebarOpen"
+        :sidebar-open="sidebarOpen"
         :layersState="layers"
         :layersLoading="layersLoading"
         :layersError="layersError"

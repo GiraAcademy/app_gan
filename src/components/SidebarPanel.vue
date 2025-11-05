@@ -5,6 +5,10 @@ import AnalisisTab from './sidebar/AnalisisTab.vue'
 
 const props = defineProps({
   isOpen: Boolean,
+  sidebarOpen: {
+    type: Boolean,
+    default: false
+  },
   layersState: {
     type: Object,
     default: () => ({})
@@ -17,6 +21,15 @@ const props = defineProps({
     type: Object,
     default: () => ({})
   }
+})
+
+// Debug log
+console.log('SidebarPanel mounted, isOpen:', props.isOpen)
+
+// Watch for changes in isOpen
+import { watch } from 'vue'
+watch(() => props.isOpen, (newVal) => {
+  console.log('SidebarPanel isOpen changed to:', newVal)
 })
 
 const emit = defineEmits(['toggle', 'toggleLayer', 'selectPotrero', 'toggleAttributeTable'])
@@ -42,8 +55,12 @@ function handleToggleAttributeTable(layerType) {
 
 <template>
   <nav 
-    :class="['w-80 relative z-20 bg-white flex flex-col h-full',
-             isOpen ? 'open' : '']"
+    :class="['bg-white flex flex-col h-full',
+             'lg:w-80', // Desktop: fixed width
+             sidebarOpen ? 'w-80' : 'w-0', // Mobile: width based on open state
+             'transition-all duration-300 ease-in-out',
+             'overflow-hidden' // Hide content when collapsed
+            ]"
     aria-label="Navegación de pestañas"
   >
     <!-- Tabs Navigation -->
@@ -129,19 +146,6 @@ function handleToggleAttributeTable(layerType) {
 }
 
 @media (max-width: 768px) {
-  nav {
-    position: absolute;
-    left: 0;
-    top: 85px;
-    height: calc(100vh - 85px);
-    width: 320px;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  nav.open {
-    transform: translateX(0);
-  }
+  /* Styles handled by Tailwind classes now */
 }
 </style>

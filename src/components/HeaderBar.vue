@@ -6,7 +6,9 @@ const props = defineProps({
 const emit = defineEmits(['toggleSidebar'])
 
 function handleToggle() {
+  console.log('HeaderBar handleToggle called')
   if (props.onToggleSidebar) {
+    console.log('Calling props.onToggleSidebar')
     props.onToggleSidebar()
   }
   emit('toggleSidebar')
