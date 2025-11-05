@@ -1,12 +1,20 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue'
 import L from 'leaflet'
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  PieController
+} from 'chart.js'
 import { useGeoJSONLayer } from '@/composables/useGeoJSONLayer'
 import { fetchPotreros } from '@/services/potrerosService'
 import { fetchPerimetro } from '@/services/perimetroService'
 import {
   createPotreroPopupContent,
-  potreroPopupOptions
+  potreroPopupOptions,
+  createLandUseChartData
 } from '@/components/map/popupHelpers'
 import { extractPotreroPopupData } from '@/utils/potreroDataHelpers'
 import { potreroDefaultStyle, perimetroDefaultStyle } from '@/components/map/layerStyles'
@@ -25,6 +33,9 @@ import {
 } from '@/components/map/mapUtils'
 import MapCoordinatesScale from '@/components/map/MapCoordinatesScale.vue'
 
+// Registrar elementos de Chart.js
+ChartJS.register(ArcElement, Tooltip, Legend, PieController)
+
 const props = defineProps({
   layers: Object,
   selectedPotrero: {
@@ -42,6 +53,122 @@ let satelliteLayer = null
 let potrerosLayer = null
 let perimetroLayer = null
 let highlightLayer = null // Capa para resaltar el potrero seleccionado
+let activeChart = null // Referencia al gráfico activo
+
+// Función para limpiar el gráfico anterior
+function destroyActiveChart() {
+  if (activeChart) {
+    try {
+      activeChart.destroy()
+      activeChart = null
+    } catch (error) {
+      console.error('Error al destruir gráfico anterior:', error)
+    }
+  }
+}
+
+// Función para crear gráfico de torta en el popup
+function createPopupChart(properties) {
+  // Buscar el contenedor del gráfico en el popup abierto (actual)
+  let popupElement = document.querySelector('.leaflet-popup-content')
+  if (!popupElement) {
+    console.warn('No popup element found - retrying')
+    // Reintentar después de un delay adicional
+    setTimeout(() => createPopupChart(properties), 100)
+    return
+  }
+  
+  let chartContainer = popupElement.querySelector('.pie-chart-container')
+  if (!chartContainer) {
+    console.warn('No chart container found in popup - retrying')
+    // Reintentar después de un delay adicional
+    setTimeout(() => createPopupChart(properties), 100)
+    return
+  }
+  
+  // Validar que existan datos de uso del suelo
+  const bosquesHa = properties?.bosques_ha || 0
+  const lagunaHa = properties?.laguna_ha || 0
+  const pecuariHa = properties?.pecuari_ha || 0
+  const total = bosquesHa + lagunaHa + pecuariHa
+  
+  // Si no hay datos, mostrar mensaje
+  if (total === 0) {
+    chartContainer.innerHTML = '<p class="text-xs text-gray-500 text-center py-4">Sin datos disponibles</p>'
+    return
+  }
+  
+  // Limpiar contenedor completamente - Esto es crítico para el segundo popup
+  chartContainer.innerHTML = ''
+  
+  // Crear canvas con id único basado en timestamp
+  const canvasId = `pie-chart-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  const canvas = document.createElement('canvas')
+  canvas.id = canvasId
+  canvas.width = chartContainer.offsetWidth || 300
+  canvas.height = 150
+  chartContainer.appendChild(canvas)
+  
+  // Obtener contexto inmediatamente
+  const ctx = canvas.getContext('2d')
+  if (!ctx) {
+    console.error('Unable to get 2D context from canvas')
+    chartContainer.innerHTML = '<p class="text-xs text-red-500 text-center py-4">Error al renderizar gráfico</p>'
+    return
+  }
+  
+  // Crear datos del gráfico
+  const chartData = createLandUseChartData(properties)
+  
+  try {
+    // Destruir gráfico anterior si existe
+    destroyActiveChart()
+    
+    // Crear nueva instancia del gráfico y guardar referencia
+    activeChart = new ChartJS(ctx, {
+      type: 'pie',
+      data: chartData,
+      options: {
+        responsive: false,
+        maintainAspectRatio: false,
+        layout: {
+          padding: 10
+        },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              font: {
+                size: 11
+              },
+              padding: 12,
+              usePointStyle: true,
+              boxHeight: 8
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            padding: 10,
+            titleFont: { size: 12 },
+            bodyFont: { size: 11 },
+            callbacks: {
+              label: function(context) {
+                const label = context.label || ''
+                const value = context.parsed || 0
+                const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0
+                return `${label}: ${value.toFixed(2)} ha (${percentage}%)`
+              }
+            }
+          }
+        }
+      }
+    })
+  } catch (error) {
+    console.error('Error al crear gráfico:', error)
+    chartContainer.innerHTML = '<p class="text-xs text-red-500 text-center py-4">Error al renderizar gráfico</p>'
+  }
+}
 
 // Usar composable para manejar la capa de potreros
 const {
@@ -60,9 +187,30 @@ const {
     // Extraer datos del potrero usando helper reutilizable
     const popupData = extractPotreroPopupData(feature.properties)
     
-    // Popup al hacer clic (variante 'default')
-    const popupContent = createPotreroPopupContent(popupData, 'default')
+    // Crear popup con gráfico
+    const popupContent = createPotreroPopupContent({
+      ...popupData,
+      properties: feature.properties
+    }, 'default')
+    
     layer.bindPopup(popupContent, potreroPopupOptions.default)
+    
+    // Agregar evento para crear el gráfico cuando se abre el popup
+    layer.on('popupopen', (e) => {
+      // Destruir gráfico anterior si existe (por si se abre otro popup sin cerrar)
+      destroyActiveChart()
+      
+      // Crear nuevo gráfico con delay aumentado para asegurar que el DOM esté listo
+      // Aumentamos a 300ms porque Leaflet puede tardar más en actualizar el popup
+      setTimeout(() => {
+        createPopupChart(feature.properties)
+      }, 300)
+    })
+    
+    // Agregar evento para limpiar el gráfico cuando se cierra el popup
+    layer.on('popupclose', () => {
+      destroyActiveChart()
+    })
   }
 })
 
