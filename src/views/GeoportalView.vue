@@ -90,7 +90,16 @@ const tableConfig = computed(() => {
 
 // Clases del contenedor principal
 const mainContainerClasses = computed(() => {
-  return 'h-full relative grid grid-cols-[320px_1fr]'
+  const baseClasses = 'h-full relative grid'
+  
+  // Desktop: siempre mostrar sidebar
+  if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+    return `${baseClasses} grid-cols-[320px_1fr]`
+  }
+  
+  // Mobile: ajustar columnas según estado del sidebar
+  const gridCols = sidebarOpen.value ? 'grid-cols-[320px_1fr]' : 'grid-cols-[0px_1fr]'
+  return `${baseClasses} ${gridCols}`
 })
 
 // Preparar datos para la tabla de atributos

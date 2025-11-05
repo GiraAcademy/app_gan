@@ -33,8 +33,8 @@ const sidebarClasses = computed(() => {
   // Desktop: always visible
   const desktopClasses = 'lg:block'
   
-  // Mobile: conditional visibility
-  const mobileClasses = props.sidebarOpen ? 'block' : 'hidden'
+  // Mobile: conditional width and visibility
+  const mobileClasses = props.sidebarOpen ? 'block' : 'w-0 overflow-hidden'
   
   return `${baseClasses} ${desktopClasses} ${mobileClasses}`
 })
