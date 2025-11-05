@@ -18,7 +18,8 @@ const props = defineProps({
     default: () => ({
       satellite: true,
       potreros: true,
-      perimetro: true
+      perimetro: true,
+      bosques: true
     })
   }
 })
@@ -50,6 +51,15 @@ const vectorLayers = ref([
     icon: '🟥',
     enabled: true,
     description: 'Límites del perímetro cargados desde API',
+    hasAttributes: true,
+    requiresAPI: true // Indica que esta capa necesita cargar datos de API
+  },
+  {
+    id: 'bosques',
+    name: 'Bosques',
+    icon: '🌲',
+    enabled: true,
+    description: 'Áreas boscosas cargadas desde API',
     hasAttributes: true,
     requiresAPI: true // Indica que esta capa necesita cargar datos de API
   }
@@ -99,6 +109,12 @@ function toggleLayer(layerId) {
     const newState = !vectorLayer.enabled
     emit('toggleLayer', layerId, newState)
   }
+}
+
+function clearBosquesCacheHandler() {
+  clearBosquesCache()
+  // Opcional: mostrar notificación al usuario
+  alert('Caché de bosques limpiado. Los datos se recargarán desde la API en la próxima carga.')
 }
 
 function showLayerAttributes(layerId) {
@@ -245,6 +261,36 @@ function getLayerError(layerId) {
           </span>
         </li>
       </ul>
+    </section>
+
+    <!-- Leyenda de Bosques Section -->
+    <section class="mb-6 relative z-10" aria-labelledby="bosques-legend-heading">
+      <h2
+        id="bosques-legend-heading"
+        class="mb-4 text-gray-800 text-base font-semibold font-montserrat border-b-2 border-teal-600 pb-2 relative uppercase tracking-wide z-10 after:content-[''] after:absolute after:-bottom-0.5 after:left-0 after:w-8 after:h-0.5 after:bg-gradient-to-r after:from-teal-600 after:to-blue-500 after:rounded-sm"
+      >
+        Leyenda de Bosques
+      </h2>
+
+      <div class="space-y-2">
+        <!-- Laguna -->
+        <div class="flex items-center gap-3">
+          <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #0066CC;"></div>
+          <span class="text-sm text-gray-700">Laguna</span>
+        </div>
+
+        <!-- Vegetación boscosa -->
+        <div class="flex items-center gap-3">
+          <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #006400;"></div>
+          <span class="text-sm text-gray-700">Vegetación boscosa</span>
+        </div>
+
+        <!-- Área agropecuaria -->
+        <div class="flex items-center gap-3">
+          <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #F5DEB3;"></div>
+          <span class="text-sm text-gray-700">Área agropecuaria</span>
+        </div>
+      </div>
     </section>
   </section>
 </template>

@@ -32,6 +32,19 @@ export const perimetroTableConfig = {
 }
 
 /**
+ * Configuración para la capa de Bosques
+ */
+export const bosquesTableConfig = {
+  layerName: 'Bosques',
+  panelHeight: 350,
+  minTableWidth: '1200px',
+  searchPlaceholder: 'Buscar bosques...',
+  rowSelectLabel: 'Clic para seleccionar bosque en el mapa',
+  // Las columnas se generarán dinámicamente desde los datos de la API
+  columns: []
+}
+
+/**
  * Configuración genérica por defecto para futuras capas
  */
 export const defaultTableConfig = {
@@ -52,7 +65,8 @@ export function getTableConfig(layerType = 'potreros') {
   // Mapa de configuraciones disponibles
   const configs = {
     potreros: potrerosTableConfig,
-    perimetro: perimetroTableConfig
+    perimetro: perimetroTableConfig,
+    bosques: bosquesTableConfig
     // Aquí se pueden agregar más capas en el futuro:
     // suelo: sueloTableConfig,
     // rios: riosTableConfig,

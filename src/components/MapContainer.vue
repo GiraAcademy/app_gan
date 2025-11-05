@@ -11,13 +11,20 @@ import {
 import { useGeoJSONLayer } from '@/composables/useGeoJSONLayer'
 import { fetchPotreros } from '@/services/potrerosService'
 import { fetchPerimetro } from '@/services/perimetroService'
+import { fetchBosques } from '@/services/bosquesService'
 import {
   createPotreroPopupContent,
   potreroPopupOptions,
   createLandUseChartData
 } from '@/components/map/popupHelpers'
 import { extractPotreroPopupData } from '@/utils/potreroDataHelpers'
-import { potreroDefaultStyle, perimetroDefaultStyle } from '@/components/map/layerStyles'
+import { 
+  potreroDefaultStyle, 
+  perimetroDefaultStyle, 
+  bosquesDefaultStyle,
+  getBosquesStyle
+} from '@/components/map/layerStyles'
+import { logBosquesCacheInfo } from '@/utils/cacheUtils'
 import { 
   createSatelliteLayer,
   initialMapConfig
@@ -44,7 +51,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['updateLoading', 'updateError', 'updatePotrerosData', 'updatePerimetroData'])
+const emit = defineEmits(['updateLoading', 'updateError', 'updatePotrerosData', 'updatePerimetroData', 'updateBosquesData'])
 
 const mapContainer = ref(null)
 const mapInstance = ref(null) // Ref reactivo para el mapa
@@ -52,6 +59,7 @@ const mapInstance = ref(null) // Ref reactivo para el mapa
 let satelliteLayer = null
 let potrerosLayer = null
 let perimetroLayer = null
+let bosquesLayer = null
 let highlightLayer = null // Capa para resaltar el potrero seleccionado
 let activeChart = null // Referencia al gráfico activo
 
@@ -231,6 +239,23 @@ const {
   }
 })
 
+// Usar composable para manejar la capa de bosques
+const {
+  geoJSONData: bosquesGeoJSON,
+  isLoading: bosquesLoading,
+  error: bosquesError,
+  loadData: loadBosques,
+  createLayer: createBosquesLayer,
+  getBounds: getBosquesBounds
+} = useGeoJSONLayer({
+  fetchData: fetchBosques,
+  styleFunction: getBosquesStyle,
+  onEachFeature: (feature, layer) => {
+    // Bosques podría tener popup si es necesario
+    // Por ahora, sin popup
+  }
+})
+
 // Watch para emitir cambios en el estado de carga
 watch(isLoading, (loading) => {
   emit('updateLoading', 'potreros', loading)
@@ -265,9 +290,28 @@ watch(perimetroGeoJSON, (data) => {
   }
 })
 
+// Watch para emitir cambios en el estado de carga de bosques
+watch(bosquesLoading, (loading) => {
+  emit('updateLoading', 'bosques', loading)
+})
+
+// Watch para emitir errores de bosques
+watch(bosquesError, (err) => {
+  emit('updateError', 'bosques', err)
+})
+
+// Watch para emitir datos de bosques
+watch(bosquesGeoJSON, (data) => {
+  if (data) {
+    emit('updateBosquesData', data)
+    // Mostrar información del caché en consola
+    logBosquesCacheInfo()
+  }
+})
+
 onMounted(async () => {
-  // Cargar datos de potreros y perímetro en paralelo
-  await Promise.all([loadPotreros(), loadPerimetro()])
+  // Cargar datos de potreros, perímetro y bosques en paralelo
+  await Promise.all([loadPotreros(), loadPerimetro(), loadBosques()])
 
   // Inicializar mapa con configuración estándar
   mapInstance.value = initializeMap({
@@ -290,6 +334,11 @@ onMounted(async () => {
     ? createPerimetroLayer(perimetroGeoJSON.value)
     : L.layerGroup()
 
+  // Crear capa de bosques desde GeoJSON
+  bosquesLayer = bosquesGeoJSON.value 
+    ? createBosquesLayer(bosquesGeoJSON.value)
+    : L.layerGroup()
+
   // Ajustar el mapa a los límites de los potreros (prioridad)
   if (potrerosGeoJSON.value) {
     fitMapToBounds({ 
@@ -305,6 +354,9 @@ onMounted(async () => {
   }
   if (props.layers?.perimetro) {
     perimetroLayer.addTo(mapInstance.value)
+  }
+  if (props.layers?.bosques) {
+    bosquesLayer.addTo(mapInstance.value)
   }
   if (props.layers?.potreros) {
     potrerosLayer.addTo(mapInstance.value)
@@ -335,6 +387,13 @@ watch(() => props.layers, (newLayers) => {
     layer: potrerosLayer,
     shouldShow: newLayers.potreros
   })
+
+  // Capa Bosques
+  toggleLayer({
+    map: mapInstance.value,
+    layer: bosquesLayer,
+    shouldShow: newLayers.bosques
+  })
 }, { deep: true })
 
 // Watch para recargar potreros si cambian los datos
@@ -349,17 +408,23 @@ watch(potrerosGeoJSON, (newData) => {
   // Crear nueva capa usando el composable
   potrerosLayer = createLayer(newData)
 
-  // Reordenar capas para mantener perímetro debajo de potreros
+  // Reordenar capas para mantener el orden correcto: perímetro, bosques, potreros
   if (perimetroLayer && mapInstance.value.hasLayer(perimetroLayer)) {
     mapInstance.value.removeLayer(perimetroLayer)
+  }
+  if (bosquesLayer && mapInstance.value.hasLayer(bosquesLayer)) {
+    mapInstance.value.removeLayer(bosquesLayer)
   }
   if (potrerosLayer && props.layers?.potreros) {
     mapInstance.value.removeLayer(potrerosLayer)
   }
   
-  // Agregar en orden correcto: perímetro primero, luego potreros
+  // Agregar en orden correcto: perímetro primero, luego bosques, luego potreros
   if (props.layers?.perimetro && perimetroLayer) {
     perimetroLayer.addTo(mapInstance.value)
+  }
+  if (props.layers?.bosques && bosquesLayer) {
+    bosquesLayer.addTo(mapInstance.value)
   }
   if (props.layers?.potreros && potrerosLayer) {
     potrerosLayer.addTo(mapInstance.value)
@@ -389,17 +454,62 @@ watch(perimetroGeoJSON, (newData) => {
     perimetroLayer = L.layerGroup()
   }
 
-  // Reordenar capas para mantener perímetro debajo de potreros
+  // Reordenar capas para mantener el orden correcto: perímetro, bosques, potreros
   if (perimetroLayer && mapInstance.value.hasLayer(perimetroLayer)) {
     mapInstance.value.removeLayer(perimetroLayer)
+  }
+  if (bosquesLayer && mapInstance.value.hasLayer(bosquesLayer)) {
+    mapInstance.value.removeLayer(bosquesLayer)
   }
   if (potrerosLayer && mapInstance.value.hasLayer(potrerosLayer)) {
     mapInstance.value.removeLayer(potrerosLayer)
   }
   
-  // Agregar en orden correcto: perímetro primero, luego potreros
+  // Agregar en orden correcto: perímetro primero, luego bosques, luego potreros
   if (props.layers?.perimetro && perimetroLayer) {
     perimetroLayer.addTo(mapInstance.value)
+  }
+  if (props.layers?.bosques && bosquesLayer) {
+    bosquesLayer.addTo(mapInstance.value)
+  }
+  if (props.layers?.potreros && potrerosLayer) {
+    potrerosLayer.addTo(mapInstance.value)
+  }
+})
+
+// Watch para recargar bosques si cambian los datos
+watch(bosquesGeoJSON, (newData) => {
+  if (!mapInstance.value) return
+
+  // Remover la capa antigua
+  if (bosquesLayer && mapInstance.value.hasLayer(bosquesLayer)) {
+    mapInstance.value.removeLayer(bosquesLayer)
+  }
+
+  // Crear nueva capa usando el composable
+  if (newData) {
+    bosquesLayer = createBosquesLayer(newData)
+  } else {
+    bosquesLayer = L.layerGroup()
+  }
+
+  // Reordenar capas para mantener el orden correcto: perímetro, bosques, potreros
+  if (perimetroLayer && mapInstance.value.hasLayer(perimetroLayer)) {
+    mapInstance.value.removeLayer(perimetroLayer)
+  }
+  if (bosquesLayer && mapInstance.value.hasLayer(bosquesLayer)) {
+    mapInstance.value.removeLayer(bosquesLayer)
+  }
+  if (potrerosLayer && mapInstance.value.hasLayer(potrerosLayer)) {
+    mapInstance.value.removeLayer(potrerosLayer)
+  }
+  
+  // Agregar en orden correcto: perímetro primero, luego bosques, luego potreros
+  if (props.layers?.perimetro && perimetroLayer) {
+    perimetroLayer.addTo(mapInstance.value)
+  }
+  if (props.layers?.bosques && bosquesLayer) {
+    bosquesLayer.addTo(mapInstance.value)
   }
   if (props.layers?.potreros && potrerosLayer) {
     potrerosLayer.addTo(mapInstance.value)

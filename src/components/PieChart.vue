@@ -91,4 +91,3 @@ watch(() => props.options, () => {
   position: relative;
 }
 </style>
-<parameter name="filePath">c:\Users\gira\Documents\app_gan\src\components\PieChart.vue

@@ -15,7 +15,8 @@ const mapContainerRef = ref(null) // Referencia al componente MapContainer
 const layers = ref({
   satellite: true,
   potreros: true,
-  perimetro: true
+  perimetro: true,
+  bosques: true
 })
 
 // Estado de carga de las capas
@@ -30,6 +31,9 @@ const potrerosData = ref(null)
 
 // Datos de perímetro (para la tabla de atributos)
 const perimetroData = ref(null)
+
+// Datos de bosques (para la tabla de atributos)
+const bosquesData = ref(null)
 
 function toggleSidebar() {
   sidebarOpen.value = !sidebarOpen.value
@@ -63,10 +67,18 @@ function updatePerimetroData(data) {
   perimetroData.value = data
 }
 
+// Actualizar datos de bosques (desde MapContainer)
+function updateBosquesData(data) {
+  bosquesData.value = data
+}
+
 // Manejar tabla de atributos
 function toggleAttributeTable(layerType = 'potreros') {
+  console.log('toggleAttributeTable called with layerType:', layerType)
+  console.log('Current showAttributeTable:', showAttributeTable.value)
   currentLayerType.value = layerType
   showAttributeTable.value = !showAttributeTable.value
+  console.log('New showAttributeTable:', showAttributeTable.value)
 }
 
 // Configuración de la tabla según el tipo de capa
@@ -86,9 +98,14 @@ const tableData = computed(() => {
     case 'perimetro':
       data = perimetroData.value
       break
+    case 'bosques':
+      data = bosquesData.value
+      break
     default:
       data = potrerosData.value // fallback
   }
+  
+  console.log('tableData computed for layer:', currentLayerType.value, 'data:', data)
   
   if (!data || !data.features) return []
   
@@ -212,6 +229,7 @@ function handleResetSelection() {
           @update-error="updateLayerError"
           @update-potreros-data="updatePotrerosData"
           @update-perimetro-data="updatePerimetroData"
+          @update-bosques-data="updateBosquesData"
         />
         
         <!-- Chatbot Flotante con datos -->

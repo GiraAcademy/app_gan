@@ -13,6 +13,58 @@ export const potreroDefaultStyle = {
 }
 
 /**
+ * Estilo para bosques
+ */
+export const bosquesDefaultStyle = {
+  color: '#228B22',
+  fillColor: '#228B22',
+  fillOpacity: 0.3,
+  weight: 2
+}
+
+/**
+ * Función de estilo dinámico para bosques según tipo de vegetación
+ * Laguna: azul
+ * Vegetación boscosa: verde oscuro
+ * Área agropecuaria: amarillo claro (tipo crema)
+ */
+export function getBosquesStyle(feature) {
+  const vegetacion = feature?.properties?.vegetacion
+  
+  switch (vegetacion) {
+    case 'Laguna':
+      return {
+        color: '#0066CC',      // Azul para lagunas
+        fillColor: '#0066CC',
+        fillOpacity: 0.4,
+        weight: 2
+      }
+    case 'Vegetacion boscosa':
+      return {
+        color: '#006400',      // Verde oscuro para vegetación boscosa
+        fillColor: '#006400',
+        fillOpacity: 0.35,
+        weight: 2
+      }
+    case 'Area agropecuaria':
+      return {
+        color: '#F5DEB3',      // Amarillo claro/crema para área agropecuaria
+        fillColor: '#F5DEB3',
+        fillOpacity: 0.3,
+        weight: 2
+      }
+    default:
+      // Estilo por defecto si no hay tipo definido
+      return {
+        color: '#228B22',
+        fillColor: '#228B22',
+        fillOpacity: 0.3,
+        weight: 2
+      }
+  }
+}
+
+/**
  * Estilo para perímetro
  */
 export const perimetroDefaultStyle = {
