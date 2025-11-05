@@ -88,6 +88,11 @@ const tableConfig = computed(() => {
   return getTableConfig(currentLayerType.value)
 })
 
+// Clases del contenedor principal
+const mainContainerClasses = computed(() => {
+  return 'h-full relative grid grid-cols-[320px_1fr]'
+})
+
 // Preparar datos para la tabla de atributos
 const tableData = computed(() => {
   let data = null
@@ -208,11 +213,7 @@ function handleResetSelection() {
     <HeaderBar :on-toggle-sidebar="toggleSidebar" />
 
     <!-- Main Content -->
-    <div :class="['h-full relative',
-                  sidebarOpen 
-                    ? 'grid grid-cols-[320px_1fr]' // Sidebar open: 320px sidebar + flexible map
-                    : 'grid grid-cols-[0px_1fr]' // Sidebar closed: 0px sidebar + full map
-                 ]">
+    <div :class="mainContainerClasses">
       <!-- Sidebar -->
       <SidebarPanel 
         :is-open="sidebarOpen"

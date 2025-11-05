@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import CapasTab from './sidebar/CapasTab.vue'
 import AnalisisTab from './sidebar/AnalisisTab.vue'
 
@@ -26,10 +26,17 @@ const props = defineProps({
 // Debug log
 console.log('SidebarPanel mounted, isOpen:', props.isOpen)
 
-// Watch for changes in isOpen
-import { watch } from 'vue'
-watch(() => props.isOpen, (newVal) => {
-  console.log('SidebarPanel isOpen changed to:', newVal)
+// Clases del sidebar
+const sidebarClasses = computed(() => {
+  const baseClasses = 'bg-white flex flex-col h-full transition-all duration-300 ease-in-out'
+  
+  // Desktop: always visible
+  const desktopClasses = 'lg:block'
+  
+  // Mobile: conditional visibility
+  const mobileClasses = props.sidebarOpen ? 'block' : 'hidden'
+  
+  return `${baseClasses} ${desktopClasses} ${mobileClasses}`
 })
 
 const emit = defineEmits(['toggle', 'toggleLayer', 'selectPotrero', 'toggleAttributeTable'])
@@ -55,12 +62,7 @@ function handleToggleAttributeTable(layerType) {
 
 <template>
   <nav 
-    :class="['bg-white flex flex-col h-full',
-             'lg:w-80', // Desktop: fixed width
-             sidebarOpen ? 'w-80' : 'w-0', // Mobile: width based on open state
-             'transition-all duration-300 ease-in-out',
-             'overflow-hidden' // Hide content when collapsed
-            ]"
+    :class="sidebarClasses"
     aria-label="Navegación de pestañas"
   >
     <!-- Tabs Navigation -->
