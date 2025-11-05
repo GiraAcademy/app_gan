@@ -306,12 +306,29 @@ watch(bosquesGeoJSON, (data) => {
     emit('updateBosquesData', data)
     // Mostrar información del caché en consola
     logBosquesCacheInfo()
+    
+    // Recrear la capa de bosques si el mapa ya está inicializado
+    if (mapInstance.value && bosquesLayer) {
+      // Remover la capa anterior si existe
+      if (mapInstance.value.hasLayer(bosquesLayer)) {
+        mapInstance.value.removeLayer(bosquesLayer)
+      }
+      // Crear nueva capa con los datos
+      bosquesLayer = createBosquesLayer(data)
+      // Agregar al mapa si la capa está activada
+      if (props.layers.bosques) {
+        mapInstance.value.addLayer(bosquesLayer)
+      }
+    }
   }
 })
 
+// Estado para controlar si bosques ya se cargó (lazy loading)
+const bosquesLoaded = ref(false)
+
 onMounted(async () => {
-  // Cargar datos de potreros, perímetro y bosques en paralelo
-  await Promise.all([loadPotreros(), loadPerimetro(), loadBosques()])
+  // Cargar datos de potreros y perímetro en paralelo (bosques se carga on-demand)
+  await Promise.all([loadPotreros(), loadPerimetro()])
 
   // Inicializar mapa con configuración estándar
   mapInstance.value = initializeMap({
@@ -388,7 +405,12 @@ watch(() => props.layers, (newLayers) => {
     shouldShow: newLayers.potreros
   })
 
-  // Capa Bosques
+  // Capa Bosques (lazy loading)
+  if (newLayers.bosques && !bosquesLoaded.value) {
+    // Cargar bosques solo cuando se activa por primera vez
+    bosquesLoaded.value = true
+    loadBosques()
+  }
   toggleLayer({
     map: mapInstance.value,
     layer: bosquesLayer,

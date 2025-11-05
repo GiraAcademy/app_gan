@@ -16,7 +16,7 @@ const layers = ref({
   satellite: true,
   potreros: true,
   perimetro: true,
-  bosques: true
+  bosques: false // Desactivada por defecto para mejorar rendimiento inicial
 })
 
 // Estado de carga de las capas
