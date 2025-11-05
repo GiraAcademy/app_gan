@@ -22,7 +22,8 @@ import {
   potreroDefaultStyle,
   perimetroDefaultStyle,
   bosquesDefaultStyle,
-  getBosquesStyle
+  getBosquesStyle,
+  potreroTooltipOptions
 } from '@/components/map/layerStyles'
 import { logBosquesCacheInfo } from '@/utils/cacheUtils'
 import {
@@ -237,6 +238,11 @@ const {
     }, variant)
 
     layer.bindPopup(popupContent, potreroPopupOptions[variant])
+
+    // Agregar tooltip con el nombre del potrero
+    if (feature.properties?.nombre) {
+      layer.bindTooltip(feature.properties.nombre, potreroTooltipOptions)
+    }
 
     layer.on('popupopen', (e) => {
       console.log('📂 Popup abierto para potrero:', feature.properties?.nombre)
