@@ -4,7 +4,7 @@
 
 // Configuración de IndexedDB para caché avanzado
 const DB_NAME = 'MapCacheDB'
-const DB_VERSION = 3
+const DB_VERSION = 4
 const BOSQUES_STORE = 'bosques'
 const POTREROS_STORE = 'potreros'
 const PERIMETRO_STORE = 'perimetro'
@@ -60,6 +60,14 @@ function initIndexedDB() {
 export async function saveToIndexedDB(key, data, metadata = {}, storeName = BOSQUES_STORE) {
   try {
     const db = await initIndexedDB()
+    
+    // Verificar que el store existe
+    if (!db.objectStoreNames.contains(storeName)) {
+      console.warn(`Store '${storeName}' no existe en IndexedDB, usando localStorage`)
+      localStorage.setItem(key, JSON.stringify(data))
+      return
+    }
+    
     const transaction = db.transaction([storeName], 'readwrite')
     const store = transaction.objectStore(storeName)
 
@@ -81,8 +89,6 @@ export async function saveToIndexedDB(key, data, metadata = {}, storeName = BOSQ
       request.onsuccess = () => resolve()
       request.onerror = () => reject(request.error)
     })
-
-    console.log(`💾 Datos guardados en IndexedDB: ${key} (${(cacheEntry.size / 1024).toFixed(1)} KB)`)
   } catch (error) {
     console.error('Error guardando en IndexedDB:', error)
     // Fallback a localStorage
@@ -96,6 +102,13 @@ export async function saveToIndexedDB(key, data, metadata = {}, storeName = BOSQ
 export async function getFromIndexedDB(key, storeName = BOSQUES_STORE) {
   try {
     const db = await initIndexedDB()
+    
+    // Verificar que el store existe
+    if (!db.objectStoreNames.contains(storeName)) {
+      console.warn(`Store '${storeName}' no existe en IndexedDB`)
+      return null
+    }
+    
     const transaction = db.transaction([storeName], 'readonly')
     const store = transaction.objectStore(storeName)
 
@@ -120,7 +133,7 @@ export async function getFromIndexedDB(key, storeName = BOSQUES_STORE) {
       }
     }
   } catch (error) {
-    console.error('Error obteniendo de IndexedDB:', error)
+    console.warn('Error obteniendo de IndexedDB:', error)
     // Fallback a localStorage
     const fallback = localStorage.getItem(key)
     return fallback ? { data: JSON.parse(fallback) } : null
@@ -145,11 +158,17 @@ async function decompressData(data) {
  * Limpia entradas expiradas de IndexedDB
  */
 export async function cleanExpiredCache(maxAgeHours = 24, storeName = null) {
-  const storesToClean = storeName ? [storeName] : [BOSQUES_STORE, POTREROS_STORE, PERIMETRO_STORE]
+  const storesToClean = storeName ? [storeName] : [BOSQUES_STORE, POTREROS_STORE, PERIMETRO_STORE, SUELO_STORE]
 
   for (const store of storesToClean) {
     try {
       const db = await initIndexedDB()
+      
+      // Verificar que el store existe
+      if (!db.objectStoreNames.contains(store)) {
+        continue
+      }
+      
       const transaction = db.transaction([store], 'readwrite')
       const storeObj = transaction.objectStore(store)
       const index = storeObj.index('timestamp')
@@ -166,10 +185,6 @@ export async function cleanExpiredCache(maxAgeHours = 24, storeName = null) {
           cursor.delete()
           deletedCount++
           cursor.continue()
-        } else {
-          if (deletedCount > 0) {
-            console.log(`🧹 Limpiados ${deletedCount} entradas expiradas de ${store}`)
-          }
         }
       }
     } catch (error) {
@@ -237,21 +252,18 @@ export async function getCacheStats(storeName = null) {
  * Muestra información del caché de bosques en la consola
  */
 export function logBosquesCacheInfo() {
-  console.log('📭 Función de logging movida a bosquesService.js')
 }
 
 /**
  * Función global para limpiar caché de bosques (disponible en consola)
  */
 export function clearBosquesCacheGlobal() {
-  console.log('🗑️ Función de limpieza movida a bosquesService.js')
 }
 
 /**
  * Función global para mostrar info del caché (disponible en consola)
  */
 export function showBosquesCacheInfo() {
-  console.log('📊 Función de info movida a bosquesService.js')
 }
 
 // Hacer disponible en window para acceso desde consola
@@ -259,15 +271,6 @@ if (typeof window !== 'undefined') {
   window.logBosquesCacheInfo = logBosquesCacheInfo
   window.clearBosquesCache = clearBosquesCacheGlobal
   window.showBosquesCacheInfo = showBosquesCacheInfo
-
-  // Mostrar instrucciones de uso al cargar
-  console.log(`
-🌲 Sistema de caché de bosques activado
-📋 Comandos disponibles en consola:
-  • showBosquesCacheInfo() - Ver información del caché
-  • clearBosquesCache() - Limpiar caché manualmente
-  • logBosquesCacheInfo() - Alias de showBosquesCacheInfo
-  `)
 }
 
 // Exportar constantes para uso en otros módulos

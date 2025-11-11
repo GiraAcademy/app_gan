@@ -19,11 +19,8 @@ export async function fetchSuelo() {
     const cached = await getFromIndexedDB(SUELO_CACHE_KEY, SUELO_STORE)
 
     if (cached && isCacheValid(cached.metadata)) {
-      console.log('🌍 Usando datos de suelo desde IndexedDB')
       return cached.data
     }
-
-    console.log('🌍 Descargando datos de suelo desde API...')
 
     // Configurar timeout y headers optimizados
     const controller = new AbortController()
@@ -53,7 +50,6 @@ export async function fetchSuelo() {
     // Guardar en IndexedDB con metadata
     await saveToIndexedDB(SUELO_CACHE_KEY, rawData, { version: CACHE_VERSION }, SUELO_STORE)
 
-    console.log(`✅ Suelo cargado exitosamente: ${rawData.features.length} puntos`)
     return rawData
   } catch (error) {
     console.error('❌ Error al obtener datos de suelo:', error)

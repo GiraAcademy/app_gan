@@ -23,9 +23,6 @@ const props = defineProps({
   }
 })
 
-// Debug log
-console.log('SidebarPanel mounted, isOpen:', props.isOpen)
-
 // Clases del sidebar
 const sidebarClasses = computed(() => {
   const baseClasses = 'bg-white flex flex-col h-full transition-all duration-300 ease-in-out'

@@ -56,14 +56,11 @@ ChartJS.register(ArcElement, Tooltip, Legend, PieController)
 // Función para volver a la vista inicial del mapa
 function goHome() {
   if (mapInstance.value && potrerosGeoJSON.value) {
-    console.log('Volviendo a vista inicial del mapa')
     fitMapToBounds({
       map: mapInstance.value,
       getBounds,
       geoJSONData: potrerosGeoJSON.value
     })
-  } else {
-    console.log('No se puede volver a vista inicial: mapa o datos no disponibles')
   }
 }
 
@@ -93,7 +90,6 @@ let potrerosLayersMap = new Map() // Mapa de id -> layer para actualizar popups
 // Función para limpiar el gráfico anterior
 function destroyActiveChart() {
   if (activeChart) {
-    console.log('🗑️ Destruyendo gráfico anterior')
     try {
       activeChart.destroy()
       activeChart = null
@@ -105,7 +101,6 @@ function destroyActiveChart() {
 
 // Función para crear gráfico de torta en el popup
 function createPopupChart(properties) {
-  console.log('🎨 Creando gráfico para potrero:', properties?.nombre, 'con propiedades:', properties)
 
   const maxAttempts = 50 // Máximo 50 intentos (aprox 1 segundo a 60fps)
   let attempts = 0
@@ -133,17 +128,12 @@ function createPopupChart(properties) {
       return
     }
 
-    console.log('✅ Contenedor del gráfico encontrado, creando gráfico...')
-
     const bosquesHa = properties?.bosques_ha || 0
     const lagunaHa = properties?.laguna_ha || 0
     const pecuariHa = properties?.pecuari_ha || 0
     const total = bosquesHa + lagunaHa + pecuariHa
 
-    console.log('📊 Datos del gráfico:', { bosquesHa, lagunaHa, pecuariHa, total })
-
     if (total === 0) {
-      console.log('⚠️ Sin datos para el gráfico, mostrando mensaje')
       chartContainer.innerHTML = '<p class="text-xs text-gray-500 text-center py-4">Sin datos disponibles</p>'
       return
     }
@@ -158,8 +148,6 @@ function createPopupChart(properties) {
     canvas.height = 150
     chartContainer.appendChild(canvas)
 
-    console.log('🎨 Canvas creado:', canvasId, 'tamaño:', canvas.width, 'x', canvas.height)
-
     const ctx = canvas.getContext('2d')
     if (!ctx) {
       console.error('❌ Unable to get 2D context from canvas')
@@ -168,7 +156,6 @@ function createPopupChart(properties) {
     }
 
     const chartData = createLandUseChartData(properties)
-    console.log('📈 Datos para Chart.js:', chartData)
 
     try {
       destroyActiveChart()
@@ -207,7 +194,6 @@ function createPopupChart(properties) {
           }
         }
       })
-      console.log('✅ Gráfico creado exitosamente')
     } catch (error) {
       console.error('❌ Error al crear gráfico:', error)
       chartContainer.innerHTML = '<p class="text-xs text-red-500 text-center py-4">Error al renderizar gráfico</p>'
@@ -255,7 +241,6 @@ const {
     }
 
     layer.on('popupopen', (e) => {
-      console.log('📂 Popup abierto para potrero:', feature.properties?.nombre)
       destroyActiveChart()
       setTimeout(() => {
         createPopupChart(feature.properties)
@@ -497,7 +482,6 @@ watch(() => props.selectedPotrero, (potreroData, oldPotreroData) => {
     
     // Si el popup está abierto, actualizar el gráfico
     if (mapInstance.value.hasLayer(oldLayer) && oldLayer.getPopup() && oldLayer.getPopup().isOpen()) {
-      console.log('🔄 Actualizando gráfico para popup abierto (deselección)')
       setTimeout(() => createPopupChart(oldLayer.feature.properties), 100)
     }
   }
@@ -515,12 +499,10 @@ watch(() => props.selectedPotrero, (potreroData, oldPotreroData) => {
     
     // Si el popup está abierto, actualizar el gráfico
     if (mapInstance.value.hasLayer(newLayer) && newLayer.getPopup() && newLayer.getPopup().isOpen()) {
-      console.log('🔄 Actualizando gráfico para popup abierto (selección)')
       setTimeout(() => createPopupChart(newLayer.feature.properties), 100)
     } else {
       // Si el popup no está abierto, abrirlo automáticamente
       newLayer.openPopup()
-      console.log('📢 Popup abierto programáticamente para potrero filtrado')
     }
   }
 
@@ -561,7 +543,6 @@ defineExpose({
       
       // Si el popup está abierto, actualizar el gráfico
       if (mapInstance.value.hasLayer(layer) && layer.getPopup() && layer.getPopup().isOpen()) {
-        console.log('🔄 Actualizando gráfico para popup abierto (clear selection)')
         setTimeout(() => createPopupChart(layer.feature.properties), 100)
       }
     }

@@ -19,11 +19,8 @@ export async function fetchBosques() {
     const cached = await getFromIndexedDB(BOSQUES_CACHE_KEY, BOSQUES_STORE)
 
     if (cached && isCacheValid(cached.metadata)) {
-      console.log('🌲 Usando datos de bosques desde IndexedDB')
       return cached.data
     }
-
-    console.log('🌲 Descargando datos de bosques desde API...')
 
     // Configurar timeout y headers optimizados
     const controller = new AbortController()
@@ -60,8 +57,6 @@ export async function fetchBosques() {
       optimizedSize: JSON.stringify(optimizedData).length
     }, BOSQUES_STORE)
 
-    console.log(`💾 Bosques guardados en IndexedDB (${calculateSizeReduction(rawData, optimizedData)}% reducción)`)
-
     return optimizedData
 
   } catch (error) {
@@ -74,7 +69,6 @@ export async function fetchBosques() {
     // Intentar usar datos expirados como fallback
     const cached = await getFromIndexedDB(BOSQUES_CACHE_KEY, BOSQUES_STORE)
     if (cached) {
-      console.log('⚠️ Usando datos de bosques expirados como fallback')
       return cached.data
     }
 
@@ -131,7 +125,6 @@ export async function clearBosquesCache() {
       request.onerror = () => reject(request.error)
     })
 
-    console.log('🗑️ Caché de bosques limpiado de IndexedDB')
   } catch (error) {
     console.error('Error limpiando caché de IndexedDB:', error)
     // Fallback a localStorage
@@ -204,7 +197,6 @@ function optimizeGeoJSONData(geojson) {
       })
     }
 
-    console.log(`🔧 Datos optimizados: ${geojson.features.length} features, reducido ~${calculateSizeReduction(geojson, optimized)}%`)
     return optimized
 
   } catch (error) {

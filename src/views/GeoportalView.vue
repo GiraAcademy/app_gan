@@ -41,9 +41,7 @@ const bosquesData = ref(null)
 const sueloData = ref(null)
 
 function toggleSidebar() {
-  console.log('toggleSidebar called, current sidebarOpen:', sidebarOpen.value)
   sidebarOpen.value = !sidebarOpen.value
-  console.log('new sidebarOpen:', sidebarOpen.value)
 }
 
 function handleToggleLayer(layerName, isVisible) {
@@ -86,11 +84,8 @@ function updateSueloData(data) {
 
 // Manejar tabla de atributos
 function toggleAttributeTable(layerType = 'potreros') {
-  console.log('toggleAttributeTable called with layerType:', layerType)
-  console.log('Current showAttributeTable:', showAttributeTable.value)
   currentLayerType.value = layerType
   showAttributeTable.value = !showAttributeTable.value
-  console.log('New showAttributeTable:', showAttributeTable.value)
 }
 
 // Configuración de la tabla según el tipo de capa
@@ -133,8 +128,6 @@ const tableData = computed(() => {
     default:
       data = potrerosData.value // fallback
   }
-  
-  console.log('tableData computed for layer:', currentLayerType.value, 'data:', data)
   
   if (!data || !data.features) return []
   
@@ -214,7 +207,6 @@ function handleTableRowSelected(row) {
 // La exportación ahora se maneja dentro del componente AttributeTable
 function handleExportData(data) {
   // Este evento se emite desde AttributeTable después de exportar
-  console.log(`✅ Exportados ${data.length} registros de ${tableConfig.value.layerName}`)
 }
 
 // Manejar reinicio de selección desde la tabla

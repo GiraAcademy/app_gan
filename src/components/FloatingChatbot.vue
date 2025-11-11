@@ -168,8 +168,6 @@ function getFallbackResponse(userMessage) {
 
 // Ejecutar acciones del chatbot (seleccionar potreros, etc.)
 function executeAction(action) {
-  console.log('🤖 Ejecutando acción:', action)
-  
   switch (action.type) {
     case 'SELECT_POTRERO':
       selectPotreroById(action.data)
@@ -193,7 +191,6 @@ function selectPotreroById(potreroId) {
   
   if (potrero) {
     const props_data = potrero.properties
-    console.log('✅ Seleccionando potrero:', props_data.nombre)
     
     // Emitir evento para seleccionar el potrero en el mapa
     emit('selectPotrero', {

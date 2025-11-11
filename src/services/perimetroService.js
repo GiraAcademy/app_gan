@@ -19,11 +19,8 @@ export async function fetchPerimetro() {
     const cached = await getFromIndexedDB(PERIMETRO_CACHE_KEY, PERIMETRO_STORE)
 
     if (cached && isCacheValid(cached.metadata)) {
-      console.log('🏞️ Usando datos de perímetro desde IndexedDB')
       return cached.data
     }
-
-    console.log('🏞️ Descargando datos de perímetro desde API...')
 
     // Configurar timeout y headers optimizados
     const controller = new AbortController()
@@ -60,8 +57,6 @@ export async function fetchPerimetro() {
       optimizedSize: JSON.stringify(optimizedData).length
     }, PERIMETRO_STORE)
 
-    console.log(`💾 Perímetro guardado en IndexedDB (${calculateSizeReduction(rawData, optimizedData)}% reducción)`)
-
     return optimizedData
 
   } catch (error) {
@@ -69,12 +64,9 @@ export async function fetchPerimetro() {
       console.error('⏰ Timeout descargando perímetro')
     } else {
       console.error('❌ Error obteniendo perímetro:', error)
-    }
-
-    // Intentar usar datos expirados como fallback
+    }    // Intentar usar datos expirados como fallback
     const cached = await getFromIndexedDB(PERIMETRO_CACHE_KEY, PERIMETRO_STORE)
     if (cached) {
-      console.log('⚠️ Usando datos de perímetro expirados como fallback')
       return cached.data
     }
 
@@ -182,7 +174,6 @@ export async function clearPerimetroCache() {
       request.onerror = () => reject(request.error)
     })
 
-    console.log('🗑️ Caché de perímetro limpiado de IndexedDB')
   } catch (error) {
     console.error('Error limpiando caché de IndexedDB:', error)
     // Fallback a localStorage

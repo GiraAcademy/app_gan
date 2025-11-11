@@ -19,11 +19,8 @@ export async function fetchPotreros() {
     const cached = await getFromIndexedDB(POTREROS_CACHE_KEY, POTREROS_STORE)
 
     if (cached && isCacheValid(cached.metadata)) {
-      console.log('🐄 Usando datos de potreros desde IndexedDB')
       return cached.data
     }
-
-    console.log('🐄 Descargando datos de potreros desde API...')
 
     // Configurar timeout y headers optimizados
     const controller = new AbortController()
@@ -60,8 +57,6 @@ export async function fetchPotreros() {
       optimizedSize: JSON.stringify(optimizedData).length
     }, POTREROS_STORE)
 
-    console.log(`💾 Potreros guardados en IndexedDB (${calculateSizeReduction(rawData, optimizedData)}% reducción)`)
-
     return optimizedData
 
   } catch (error) {
@@ -74,7 +69,6 @@ export async function fetchPotreros() {
     // Intentar usar datos expirados como fallback
     const cached = await getFromIndexedDB(POTREROS_CACHE_KEY, POTREROS_STORE)
     if (cached) {
-      console.log('⚠️ Usando datos de potreros expirados como fallback')
       return cached.data
     }
 
@@ -188,7 +182,6 @@ export async function clearPotrerosCache() {
       request.onerror = () => reject(request.error)
     })
 
-    console.log('🗑️ Caché de potreros limpiado de IndexedDB')
   } catch (error) {
     console.error('Error limpiando caché de IndexedDB:', error)
     // Fallback a localStorage
