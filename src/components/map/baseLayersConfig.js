@@ -14,6 +14,19 @@ export const satelliteLayerConfig = {
 }
 
 /**
+ * Opciones para la capa MDE (Modelo Digital de Elevación)
+ */
+export const mdeLayerConfig = {
+  url: 'https://palma.gira360.com/mde',
+  options: {
+    layers: 'mde',
+    format: 'image/png',
+    transparent: true,
+    attribution: 'MDE © GIRA360'
+  }
+}
+
+/**
  * Coordenadas iniciales del mapa
  */
 export const initialMapConfig = {
@@ -38,5 +51,17 @@ export function createSatelliteLayer(L) {
   return L.tileLayer(
     satelliteLayerConfig.url,
     satelliteLayerConfig.options
+  )
+}
+
+/**
+ * Crea una capa MDE (Modelo Digital de Elevación)
+ * @param {Object} L - Librería Leaflet
+ * @returns {L.TileLayer.WMS} Capa MDE configurada
+ */
+export function createMdeLayer(L) {
+  return L.tileLayer.wms(
+    mdeLayerConfig.url,
+    mdeLayerConfig.options
   )
 }

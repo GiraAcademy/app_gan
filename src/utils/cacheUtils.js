@@ -8,6 +8,7 @@ const DB_VERSION = 3
 const BOSQUES_STORE = 'bosques'
 const POTREROS_STORE = 'potreros'
 const PERIMETRO_STORE = 'perimetro'
+const SUELO_STORE = 'suelo'
 
 /**
  * Inicializa IndexedDB para caché avanzado
@@ -39,6 +40,13 @@ function initIndexedDB() {
       // Crear store para perímetro si no existe
       if (!db.objectStoreNames.contains(PERIMETRO_STORE)) {
         const store = db.createObjectStore(PERIMETRO_STORE, { keyPath: 'id' })
+        store.createIndex('timestamp', 'timestamp', { unique: false })
+        store.createIndex('version', 'version', { unique: false })
+      }
+
+      // Crear store para suelo si no existe
+      if (!db.objectStoreNames.contains(SUELO_STORE)) {
+        const store = db.createObjectStore(SUELO_STORE, { keyPath: 'id' })
         store.createIndex('timestamp', 'timestamp', { unique: false })
         store.createIndex('version', 'version', { unique: false })
       }
@@ -263,4 +271,4 @@ if (typeof window !== 'undefined') {
 }
 
 // Exportar constantes para uso en otros módulos
-export { BOSQUES_STORE, POTREROS_STORE, PERIMETRO_STORE }
+export { BOSQUES_STORE, POTREROS_STORE, PERIMETRO_STORE, SUELO_STORE }

@@ -143,3 +143,79 @@ export function createPotreroPopup(map, latLng, potreroData, variant = 'default'
     .setContent(content)
     .openOn(map)
 }
+
+/**
+ * Crea el contenido HTML para el popup de un punto de suelo
+ * @param {Object} sueloData - Datos del punto de suelo
+ * @param {Object} sueloData.properties - Propiedades del feature
+ * @returns {string} HTML del popup
+ */
+export function createSueloPopupContent(sueloData) {
+  const props = sueloData.properties || {}
+  
+  // Mapeo de colores según fertilidad
+  const fertilidadColors = {
+    'Ligeras': '#6495ED',
+    'Moderadas': '#00AA00',
+    'Fuertes': '#FF8C00',
+    'Severas': '#FF0000',
+    'Sin datos': '#808080'
+  }
+  
+  const fertilidad = props.fertilidad || 'Sin datos'
+  const perfil = props.perfil || 'Sin perfil'
+  const icon = '📍'
+  const titleClass = 'text-teal-700'
+  const fertilidadColor = fertilidadColors[fertilidad] || '#808080'
+
+  return `
+    <div class="p-2 max-w-xs text-xs text-gray-700">
+      <h3 class="font-semibold text-sm ${titleClass} mb-2">
+        ${icon} Muestra de Suelo (${perfil})
+      </h3>
+
+      <div class="space-y-1">
+        <!-- Fertilidad -->
+        <div class="flex items-start gap-2">
+          <span class="font-medium whitespace-nowrap">Fertilidad:</span>
+          <div class="flex items-center gap-1">
+            <div class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${fertilidadColor}; border: 1px solid #333;"></div>
+            <span>${fertilidad}</span>
+          </div>
+        </div>
+
+        <!-- Profundidad -->
+        ${props.profundidad ? `<div><span class="font-medium">Profundidad:</span> ${props.profundidad}</div>` : ''}
+
+        <!-- Pedregosidad -->
+        ${props.pedregosidad ? `<div><span class="font-medium">Pedregosidad:</span> ${props.pedregosidad}</div>` : ''}
+
+        <!-- Drenaje -->
+        ${props.drenaje ? `<div><span class="font-medium">Drenaje:</span> ${props.drenaje}</div>` : ''}
+
+        <!-- Erosión -->
+        ${props.erosion ? `<div><span class="font-medium">Erosión:</span> ${props.erosion}</div>` : ''}
+
+        <!-- Inundación -->
+        ${props.inundacion ? `<div><span class="font-medium">Inundación:</span> ${props.inundacion}</div>` : ''}
+
+        <!-- Vegetación -->
+        ${props.vegetacion ? `<div><span class="font-medium">Vegetación:</span> ${props.vegetacion}</div>` : ''}
+
+        <!-- Observaciones -->
+        ${props.observaciones ? `<div><span class="font-medium">Observaciones:</span> ${props.observaciones}</div>` : ''}
+      </div>
+    </div>
+  `
+}
+
+/**
+ * Opciones de popup para suelo
+ */
+export const sueloPopupOptions = {
+  className: 'suelo-popup',
+  closeButton: true,
+  maxWidth: 280,
+  minWidth: 250,
+  maxHeight: 450
+}

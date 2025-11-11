@@ -12,10 +12,13 @@ import { useGeoJSONLayer } from '@/composables/useGeoJSONLayer'
 import { fetchPotreros } from '@/services/potrerosService'
 import { fetchPerimetro } from '@/services/perimetroService'
 import { fetchBosques } from '@/services/bosquesService'
+import { fetchSuelo } from '@/services/sueloService'
 import {
   createPotreroPopupContent,
   potreroPopupOptions,
-  createLandUseChartData
+  createLandUseChartData,
+  createSueloPopupContent,
+  sueloPopupOptions
 } from '@/components/map/popupHelpers'
 import { extractPotreroPopupData } from '@/utils/potreroDataHelpers'
 import {
@@ -23,11 +26,16 @@ import {
   perimetroDefaultStyle,
   bosquesDefaultStyle,
   getBosquesStyle,
-  potreroTooltipOptions
+  potreroTooltipOptions,
+  sueloDefaultStyle,
+  sueloHoverStyle,
+  getSueloStyle,
+  getSueloHoverStyle
 } from '@/components/map/layerStyles'
 import { logBosquesCacheInfo } from '@/utils/cacheUtils'
 import {
   createSatelliteLayer,
+  createMdeLayer,
   initialMapConfig
 } from '@/components/map/baseLayersConfig'
 import {
@@ -67,15 +75,17 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['updateLoading', 'updateError', 'updatePotrerosData', 'updatePerimetroData', 'updateBosquesData'])
+const emit = defineEmits(['updateLoading', 'updateError', 'updatePotrerosData', 'updatePerimetroData', 'updateBosquesData', 'updateSueloData'])
 
 const mapContainer = ref(null)
 const mapInstance = ref(null)
 
 let satelliteLayer = null
+let mdeLayer = null
 let potrerosLayer = null
 let perimetroLayer = null
 let bosquesLayer = null
+let sueloLayer = null
 let highlightLayer = null
 let activeChart = null
 let potrerosLayersMap = new Map() // Mapa de id -> layer para actualizar popups
@@ -290,8 +300,41 @@ const {
   }
 })
 
+// Usar composable para manejar la capa de suelo
+const {
+  geoJSONData: sueloGeoJSON,
+  isLoading: sueloLoading,
+  error: sueloError,
+  loadData: loadSuelo,
+  createLayer: createSueloLayer,
+  getBounds: getSueloBounds
+} = useGeoJSONLayer({
+  fetchData: fetchSuelo,
+  styleFunction: (feature) => getSueloStyle(feature),
+  onEachFeature: (feature, layer) => {
+    // Crear popup con información del suelo
+    if (feature.properties) {
+      const popupContent = createSueloPopupContent(feature)
+      layer.bindPopup(popupContent, sueloPopupOptions)
+    }
+
+    // Efecto hover
+    layer.on('mouseover', () => {
+      if (layer.setStyle) {
+        layer.setStyle(getSueloHoverStyle(feature))
+      }
+    })
+    layer.on('mouseout', () => {
+      if (layer.setStyle) {
+        layer.setStyle(getSueloStyle(feature))
+      }
+    })
+  }
+})
+
 // Estado para controlar si bosques ya se cargó (lazy loading)
 const bosquesLoaded = ref(false)
+const sueloLoaded = ref(false)
 
 // Watchers para emitir eventos
 watch(isLoading, (loading) => {
@@ -347,8 +390,32 @@ watch(bosquesGeoJSON, (data) => {
   }
 })
 
+watch(sueloLoading, (loading) => {
+  emit('updateLoading', 'suelo', loading)
+})
+
+watch(sueloError, (err) => {
+  emit('updateError', 'suelo', err)
+})
+
+watch(sueloGeoJSON, (data) => {
+  if (data) {
+    emit('updateSueloData', data)
+
+    if (mapInstance.value && sueloLayer) {
+      if (mapInstance.value.hasLayer(sueloLayer)) {
+        mapInstance.value.removeLayer(sueloLayer)
+      }
+      sueloLayer = createSueloLayer(data)
+      if (props.layers.suelo) {
+        mapInstance.value.addLayer(sueloLayer)
+      }
+    }
+  }
+})
+
 onMounted(async () => {
-  await Promise.all([loadPotreros(), loadPerimetro()])
+  await Promise.all([loadPotreros(), loadPerimetro(), loadSuelo()])
 
   // Limpiar mapa de capas anteriores
   potrerosLayersMap.clear()
@@ -361,6 +428,7 @@ onMounted(async () => {
   })
 
   satelliteLayer = createSatelliteLayer(L)
+  mdeLayer = createMdeLayer(L)
   potrerosLayer = potrerosGeoJSON.value
     ? createLayer(potrerosGeoJSON.value)
     : L.layerGroup()
@@ -369,6 +437,9 @@ onMounted(async () => {
     : L.layerGroup()
   bosquesLayer = bosquesGeoJSON.value
     ? createBosquesLayer(bosquesGeoJSON.value)
+    : L.layerGroup()
+  sueloLayer = sueloGeoJSON.value
+    ? createSueloLayer(sueloGeoJSON.value)
     : L.layerGroup()
 
   if (potrerosGeoJSON.value) {
@@ -380,9 +451,11 @@ onMounted(async () => {
   }
 
   if (props.layers?.satellite) satelliteLayer.addTo(mapInstance.value)
+  if (props.layers?.mde) mdeLayer.addTo(mapInstance.value)
   if (props.layers?.perimetro) perimetroLayer.addTo(mapInstance.value)
   if (props.layers?.bosques) bosquesLayer.addTo(mapInstance.value)
   if (props.layers?.potreros) potrerosLayer.addTo(mapInstance.value)
+  if (props.layers?.suelo) sueloLayer.addTo(mapInstance.value)
 })
 
 // Watch para cambios en las capas
@@ -390,6 +463,7 @@ watch(() => props.layers, (newLayers) => {
   if (!mapInstance.value) return
 
   toggleLayer({ map: mapInstance.value, layer: satelliteLayer, shouldShow: newLayers.satellite })
+  toggleLayer({ map: mapInstance.value, layer: mdeLayer, shouldShow: newLayers.mde })
   toggleLayer({ map: mapInstance.value, layer: perimetroLayer, shouldShow: newLayers.perimetro })
   toggleLayer({ map: mapInstance.value, layer: potrerosLayer, shouldShow: newLayers.potreros })
 
@@ -398,6 +472,12 @@ watch(() => props.layers, (newLayers) => {
     loadBosques()
   }
   toggleLayer({ map: mapInstance.value, layer: bosquesLayer, shouldShow: newLayers.bosques })
+
+  if (newLayers.suelo && !sueloLoaded.value) {
+    sueloLoaded.value = true
+    loadSuelo()
+  }
+  toggleLayer({ map: mapInstance.value, layer: sueloLayer, shouldShow: newLayers.suelo })
 }, { deep: true })
 
 // Watch para selección de potrero

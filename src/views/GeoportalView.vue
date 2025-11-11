@@ -16,7 +16,9 @@ const layers = ref({
   satellite: true,
   potreros: true,
   perimetro: true,
-  bosques: false // Desactivada por defecto para mejorar rendimiento inicial
+  bosques: false, // Desactivada por defecto para mejorar rendimiento inicial
+  mde: false,
+  suelo: true
 })
 
 // Estado de carga de las capas
@@ -34,6 +36,9 @@ const perimetroData = ref(null)
 
 // Datos de bosques (para la tabla de atributos)
 const bosquesData = ref(null)
+
+// Datos de suelo (para la tabla de atributos)
+const sueloData = ref(null)
 
 function toggleSidebar() {
   console.log('toggleSidebar called, current sidebarOpen:', sidebarOpen.value)
@@ -72,6 +77,11 @@ function updatePerimetroData(data) {
 // Actualizar datos de bosques (desde MapContainer)
 function updateBosquesData(data) {
   bosquesData.value = data
+}
+
+// Actualizar datos de suelo (desde MapContainer)
+function updateSueloData(data) {
+  sueloData.value = data
 }
 
 // Manejar tabla de atributos
@@ -116,6 +126,9 @@ const tableData = computed(() => {
       break
     case 'bosques':
       data = bosquesData.value
+      break
+    case 'suelo':
+      data = sueloData.value
       break
     default:
       data = potrerosData.value // fallback
@@ -247,6 +260,7 @@ function handleResetSelection() {
           @update-potreros-data="updatePotrerosData"
           @update-perimetro-data="updatePerimetroData"
           @update-bosques-data="updateBosquesData"
+          @update-suelo-data="updateSueloData"
         />
         
         <!-- Chatbot Flotante con datos -->

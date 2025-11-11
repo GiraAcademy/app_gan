@@ -45,6 +45,19 @@ export const bosquesTableConfig = {
 }
 
 /**
+ * Configuración para la capa de Suelo
+ */
+export const sueloTableConfig = {
+  layerName: 'Puntos de Suelo',
+  panelHeight: 350,
+  minTableWidth: '1200px',
+  searchPlaceholder: 'Buscar puntos de suelo...',
+  rowSelectLabel: 'Clic para seleccionar punto en el mapa',
+  // Las columnas se generarán dinámicamente desde los datos de la API
+  columns: []
+}
+
+/**
  * Configuración genérica por defecto para futuras capas
  */
 export const defaultTableConfig = {
@@ -66,9 +79,9 @@ export function getTableConfig(layerType = 'potreros') {
   const configs = {
     potreros: potrerosTableConfig,
     perimetro: perimetroTableConfig,
-    bosques: bosquesTableConfig
+    bosques: bosquesTableConfig,
+    suelo: sueloTableConfig
     // Aquí se pueden agregar más capas en el futuro:
-    // suelo: sueloTableConfig,
     // rios: riosTableConfig,
     // etc.
   }

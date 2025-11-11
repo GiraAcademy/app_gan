@@ -58,10 +58,34 @@ export function useGeoJSONLayer(options = {}) {
       return L.layerGroup()
     }
 
-    const layer = L.geoJSON(data, {
-      style: styleFunction,
+    const geoJSONOptions = {
       onEachFeature: onEachFeature
-    })
+    }
+
+    // Agregar styleFunction solo si existe
+    if (styleFunction) {
+      geoJSONOptions.style = styleFunction
+    }
+
+    // Para puntos, usar pointToLayer
+    geoJSONOptions.pointToLayer = function(feature, latlng) {
+      const style = styleFunction ? styleFunction(feature) : { radius: 6, fillColor: '#0066CC' }
+      
+      if (style && style.radius) {
+        return L.circleMarker(latlng, {
+          radius: style.radius || 6,
+          fillColor: style.fillColor || '#0066CC',
+          color: style.color || '#0066CC',
+          weight: style.weight || 2,
+          opacity: style.opacity || 0.8,
+          fillOpacity: style.fillOpacity || 0.7
+        })
+      }
+      
+      return L.marker(latlng)
+    }
+
+    const layer = L.geoJSON(data, geoJSONOptions)
 
     return layer
   }

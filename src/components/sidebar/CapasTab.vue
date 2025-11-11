@@ -19,7 +19,9 @@ const props = defineProps({
       satellite: true,
       potreros: true,
       perimetro: true,
-      bosques: true
+      bosques: true,
+      mde: false,
+      suelo: true
     })
   }
 })
@@ -32,6 +34,13 @@ const baseLayers = ref([
     icon: '🛰️',
     enabled: true,
     description: 'Capa de satélite híbrida de Google'
+  },
+  {
+    id: 'mde',
+    name: 'Modelo Digital de Elevación',
+    icon: '🏔️',
+    enabled: false,
+    description: 'Capa raster MDE desde API'
   }
 ])
 
@@ -60,6 +69,15 @@ const vectorLayers = ref([
     icon: '🟥',
     enabled: true,
     description: 'Límites del perímetro cargados desde API',
+    hasAttributes: true,
+    requiresAPI: true // Indica que esta capa necesita cargar datos de API
+  },
+  {
+    id: 'suelo',
+    name: 'Muestra de Suelo',
+    icon: '🧪',
+    enabled: true,
+    description: 'Puntos de análisis de suelo cargados desde API',
     hasAttributes: true,
     requiresAPI: true // Indica que esta capa necesita cargar datos de API
   }
@@ -289,6 +307,44 @@ function getLayerError(layerId) {
         <div class="flex items-center gap-3">
           <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #F5DEB3;"></div>
           <span class="text-sm text-gray-700">Área agropecuaria</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Leyenda de Fertilidad de Suelo -->
+    <section class="mt-4 space-y-3">
+      <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+        <span>🌱 Fertilidad de Suelo</span>
+      </h3>
+      <div class="space-y-2 text-xs">
+        <!-- Ligeras -->
+        <div class="flex items-center gap-3">
+          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #6495ED;"></div>
+          <span class="text-gray-700">Ligeras</span>
+        </div>
+
+        <!-- Moderadas -->
+        <div class="flex items-center gap-3">
+          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #00AA00;"></div>
+          <span class="text-gray-700">Moderadas</span>
+        </div>
+
+        <!-- Fuertes -->
+        <div class="flex items-center gap-3">
+          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #FF8C00;"></div>
+          <span class="text-gray-700">Fuertes</span>
+        </div>
+
+        <!-- Severas -->
+        <div class="flex items-center gap-3">
+          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #FF0000;"></div>
+          <span class="text-gray-700">Severas</span>
+        </div>
+
+        <!-- Sin datos -->
+        <div class="flex items-center gap-3">
+          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #808080;"></div>
+          <span class="text-gray-700">Sin datos</span>
         </div>
       </div>
     </section>

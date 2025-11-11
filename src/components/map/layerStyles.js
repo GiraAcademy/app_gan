@@ -104,3 +104,92 @@ export const potreroTooltipOptions = {
   direction: 'center',
   className: 'potrero-tooltip'
 }
+
+/**
+ * Estilo para puntos de suelo
+ */
+export const sueloDefaultStyle = {
+  radius: 6,
+  fillColor: '#8B6914',
+  color: '#5C4409',
+  weight: 2,
+  opacity: 0.8,
+  fillOpacity: 0.7
+}
+
+/**
+ * Estilo para puntos de suelo en hover
+ */
+export const sueloHoverStyle = {
+  radius: 8,
+  fillColor: '#FFD700',
+  color: '#8B6914',
+  weight: 3,
+  opacity: 1,
+  fillOpacity: 0.9
+}
+
+/**
+ * Función de estilo dinámico para puntos de suelo según fertilidad
+ * Ligeras: Azul claro (#6495ED)
+ * Moderadas: Verde (#00AA00)
+ * Fuertes: Naranja (#FF8C00)
+ * Severas: Rojo (#FF0000)
+ * Sin datos: Gris (#808080)
+ */
+export function getSueloStyle(feature) {
+  const fertilidad = feature?.properties?.fertilidad || 'Sin datos'
+  
+  const colorMap = {
+    'Ligeras': {
+      fillColor: '#6495ED',
+      color: '#4169E1',
+      radius: 6
+    },
+    'Moderadas': {
+      fillColor: '#00AA00',
+      color: '#006400',
+      radius: 6
+    },
+    'Fuertes': {
+      fillColor: '#FF8C00',
+      color: '#FF6347',
+      radius: 6
+    },
+    'Severas': {
+      fillColor: '#FF0000',
+      color: '#DC143C',
+      radius: 6
+    },
+    'Sin datos': {
+      fillColor: '#808080',
+      color: '#505050',
+      radius: 6
+    }
+  }
+  
+  const style = colorMap[fertilidad] || colorMap['Sin datos']
+  
+  return {
+    radius: style.radius,
+    fillColor: style.fillColor,
+    color: style.color,
+    weight: 2,
+    opacity: 0.8,
+    fillOpacity: 0.7
+  }
+}
+
+/**
+ * Función de estilo hover dinámico para puntos de suelo
+ */
+export function getSueloHoverStyle(feature) {
+  const style = getSueloStyle(feature)
+  return {
+    ...style,
+    radius: 8,
+    weight: 3,
+    opacity: 1,
+    fillOpacity: 0.9
+  }
+}
