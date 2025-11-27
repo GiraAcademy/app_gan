@@ -18,7 +18,8 @@ import {
   potreroPopupOptions,
   createLandUseChartData,
   createSueloPopupContent,
-  sueloPopupOptions
+  sueloPopupOptions,
+  createVegetacionChartData
 } from '@/components/map/popupHelpers'
 import { extractPotreroPopupData } from '@/utils/potreroDataHelpers'
 import {
@@ -85,6 +86,7 @@ let bosquesLayer = null
 let sueloLayer = null
 let highlightLayer = null
 let activeChart = null
+let activeSueloChart = null
 let potrerosLayersMap = new Map() // Mapa de id -> layer para actualizar popups
 
 // Función para limpiar el gráfico anterior
@@ -95,6 +97,18 @@ function destroyActiveChart() {
       activeChart = null
     } catch (error) {
       console.error('❌ Error al destruir gráfico anterior:', error)
+    }
+  }
+}
+
+// Función para limpiar el gráfico de suelo anterior
+function destroyActiveSueloChart() {
+  if (activeSueloChart) {
+    try {
+      activeSueloChart.destroy()
+      activeSueloChart = null
+    } catch (error) {
+      console.error('❌ Error al destruir gráfico de suelo anterior:', error)
     }
   }
 }
@@ -197,6 +211,105 @@ function createPopupChart(properties) {
     } catch (error) {
       console.error('❌ Error al crear gráfico:', error)
       chartContainer.innerHTML = '<p class="text-xs text-red-500 text-center py-4">Error al renderizar gráfico</p>'
+    }
+  }
+
+  tryCreateChart()
+}
+
+// Función para crear gráfico de vegetación en el popup de suelo
+function createSueloVegetacionChart(properties) {
+  const maxAttempts = 50
+  let attempts = 0
+
+  function tryCreateChart() {
+    attempts++
+
+    let popupElement = document.querySelector('.leaflet-popup-content')
+    if (!popupElement) {
+      if (attempts < maxAttempts) {
+        requestAnimationFrame(tryCreateChart)
+      } else {
+        console.error('❌ No se pudo encontrar popup después de', maxAttempts, 'intentos')
+      }
+      return
+    }
+
+    const chartContainer = popupElement.querySelector('.pie-chart-container-suelo')
+    if (!chartContainer) {
+      if (attempts < maxAttempts) {
+        requestAnimationFrame(tryCreateChart)
+      } else {
+        console.error('❌ No se pudo encontrar .pie-chart-container-suelo')
+      }
+      return
+    }
+
+    // Acceder a propiedades sin tildes (como vienen de la API)
+    const gramineas = properties?.gramineas || 0
+    const leguminosas = properties?.leguminosas || 0
+    const malezas = properties?.malezas || 0
+    const total = gramineas + leguminosas + malezas
+
+    if (total === 0) {
+      chartContainer.innerHTML = '<p class="text-xs text-gray-500 text-center py-2">Sin datos de vegetación</p>'
+      return
+    }
+
+    chartContainer.innerHTML = ''
+    const canvasId = `suelo-chart-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    const canvas = document.createElement('canvas')
+    canvas.id = canvasId
+    canvas.style.width = '100%'
+    canvas.style.height = '150px'
+    chartContainer.appendChild(canvas)
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) {
+      console.error('❌ Unable to get 2D context from canvas')
+      chartContainer.innerHTML = '<p class="text-xs text-red-500 text-center py-2">Error al renderizar gráfico</p>'
+      return
+    }
+
+    const chartData = createVegetacionChartData(properties)
+
+    try {
+      destroyActiveSueloChart()
+      activeSueloChart = new ChartJS(ctx, {
+        type: 'pie',
+        data: chartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: 5 },
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                font: { size: 10 },
+                padding: 8,
+                usePointStyle: true,
+                boxHeight: 6
+              }
+            },
+            tooltip: {
+              padding: 8,
+              titleFont: { size: 10 },
+              bodyFont: { size: 9 },
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || ''
+                  const value = context.parsed || 0
+                  return `${label}: ${value}%`
+                }
+              }
+            }
+          }
+        }
+      })
+    } catch (error) {
+      console.error('❌ Error al crear gráfico de suelo:', error)
+      chartContainer.innerHTML = '<p class="text-xs text-red-500 text-center py-2">Error al renderizar</p>'
     }
   }
 
@@ -313,6 +426,18 @@ const {
       if (layer.setStyle) {
         layer.setStyle(getSueloStyle(feature))
       }
+    })
+
+    // Crear gráfico cuando se abre el popup
+    layer.on('popupopen', (e) => {
+      destroyActiveSueloChart()
+      setTimeout(() => {
+        createSueloVegetacionChart(feature.properties)
+      }, 300)
+    })
+
+    layer.on('popupclose', () => {
+      destroyActiveSueloChart()
     })
   }
 })
@@ -558,6 +683,33 @@ defineExpose({
           geoJSONData: potrerosGeoJSON.value
         })
       }
+    }
+  },
+
+  selectSueloFeature(feature) {
+    // Encontrar la layer del suelo y resaltarla
+    if (sueloLayer && mapInstance.value) {
+      sueloLayer.eachLayer((layer) => {
+        if (layer.feature === feature) {
+          // Cambiar el estilo para resaltar
+          const highlightStyle = {
+            color: '#FFD700',
+            weight: 3,
+            opacity: 1,
+            fillOpacity: 0.9,
+            radius: 10
+          }
+          layer.setStyle(highlightStyle)
+          
+          // Centrar el mapa en el feature
+          if (layer.getLatLng) {
+            mapInstance.value.setView(layer.getLatLng(), 15)
+          }
+        } else {
+          // Resetear otros features
+          layer.setStyle(getSueloStyle(layer.feature))
+        }
+      })
     }
   },
 

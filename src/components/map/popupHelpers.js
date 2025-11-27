@@ -145,6 +145,36 @@ export function createPotreroPopup(map, latLng, potreroData, variant = 'default'
 }
 
 /**
+ * Crea los datos para el gráfico de vegetación de suelo
+ * @param {Object} properties - Propiedades del feature
+ * @returns {Object} Datos para Chart.js
+ */
+export function createVegetacionChartData(properties) {
+  // Acceder a propiedades sin tildes (como vienen de la API)
+  const gramineas = parseFloat(properties?.gramineas) || 0
+  const leguminosas = parseFloat(properties?.leguminosas) || 0
+  const malezas = parseFloat(properties?.malezas) || 0
+
+  return {
+    labels: ['Gramíneas', 'Leguminosas', 'Malezas'],
+    datasets: [{
+      data: [gramineas, leguminosas, malezas],
+      backgroundColor: [
+        '#90EE90', // Verde claro para gramíneas
+        '#FFD700', // Oro para leguminosas
+        '#FF6B6B'  // Rojo para malezas
+      ],
+      borderColor: [
+        '#228B22',
+        '#DAA520',
+        '#DC143C'
+      ],
+      borderWidth: 2
+    }]
+  }
+}
+
+/**
  * Crea el contenido HTML para el popup de un punto de suelo
  * @param {Object} sueloData - Datos del punto de suelo
  * @param {Object} sueloData.properties - Propiedades del feature
@@ -199,11 +229,14 @@ export function createSueloPopupContent(sueloData) {
         <!-- Inundación -->
         ${props.inundacion ? `<div><span class="font-medium">Inundación:</span> ${props.inundacion}</div>` : ''}
 
-        <!-- Vegetación -->
-        ${props.vegetacion ? `<div><span class="font-medium">Vegetación:</span> ${props.vegetacion}</div>` : ''}
+        <!-- Gráfico de Vegetación -->
+        <div class="border-t pt-2 mt-2">
+          <h4 class="font-medium text-xs text-gray-800 mb-2">Composición de Vegetación</h4>
+          <div class="pie-chart-container-suelo" style="width: 100%; height: 150px; position: relative;"></div>
+        </div>
 
         <!-- Observaciones -->
-        ${props.observaciones ? `<div><span class="font-medium">Observaciones:</span> ${props.observaciones}</div>` : ''}
+        ${props.observaciones ? `<div class="border-t pt-2 mt-2"><span class="font-medium">Observaciones:</span> ${props.observaciones}</div>` : ''}
       </div>
     </div>
   `

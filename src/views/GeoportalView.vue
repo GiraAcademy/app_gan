@@ -170,34 +170,46 @@ const tableColumns = computed(() => {
 
 // Manejar selección desde la tabla
 function handleTableRowSelected(row) {
-  // Solo manejar selección para potreros por ahora
-  if (currentLayerType.value !== 'potreros') return
-  
-  // El row.id es el índice + 1 (lo agregamos en tableData)
-  const featureIndex = row.id - 1
-  
-  // Obtener el feature completo del GeoJSON original
-  if (potrerosData.value?.features && potrerosData.value.features[featureIndex]) {
-    const feature = potrerosData.value.features[featureIndex]
+  if (currentLayerType.value === 'potreros') {
+    // El row.id es el índice + 1 (lo agregamos en tableData)
+    const featureIndex = row.id - 1
     
-    // Normalizar los datos usando el helper reutilizable
-    const potreroData = normalizePotreroData(feature)
-    
-    // Pasar al manejador principal de selección
-    if (potreroData) {
-      handleSelectPotrero(potreroData)
-    }
-  } else {
-    // Fallback: buscar por propiedades si el índice no funciona
-    const feature = potrerosData.value?.features.find(
-      f => f.properties?.gid === row.gid || 
-           f.properties?.nombre === row.nombre
-    )
-    
-    if (feature) {
+    // Obtener el feature completo del GeoJSON original
+    if (potrerosData.value?.features && potrerosData.value.features[featureIndex]) {
+      const feature = potrerosData.value.features[featureIndex]
+      
+      // Normalizar los datos usando el helper reutilizable
       const potreroData = normalizePotreroData(feature)
+      
+      // Pasar al manejador principal de selección
       if (potreroData) {
         handleSelectPotrero(potreroData)
+      }
+    } else {
+      // Fallback: buscar por propiedades si el índice no funciona
+      const feature = potrerosData.value?.features.find(
+        f => f.properties?.gid === row.gid || 
+             f.properties?.nombre === row.nombre
+      )
+      
+      if (feature) {
+        const potreroData = normalizePotreroData(feature)
+        if (potreroData) {
+          handleSelectPotrero(potreroData)
+        }
+      }
+    }
+  } else if (currentLayerType.value === 'suelo') {
+    // Manejar selección de suelo
+    const featureIndex = row.id - 1
+    
+    // Obtener el feature completo del GeoJSON original
+    if (sueloData.value?.features && sueloData.value.features[featureIndex]) {
+      const feature = sueloData.value.features[featureIndex]
+      
+      // Emitir evento para seleccionar el suelo en el mapa
+      if (mapContainerRef.value && mapContainerRef.value.selectSueloFeature) {
+        mapContainerRef.value.selectSueloFeature(feature)
       }
     }
   }
