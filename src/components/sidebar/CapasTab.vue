@@ -288,7 +288,7 @@ function getLayerError(layerId) {
       </h2>
 
       <!-- Subtítulo: Bosques -->
-      <h3 class="mb-2 text-xs font-semibold text-gray-700 mt-3">Bosques</h3>
+      <h3 class="mb-2 text-xs font-semibold text-gray-700 mt-3">🌲 Bosques</h3>
       <div class="space-y-2 mb-4">
         <!-- Laguna -->
         <div class="flex items-center gap-3">
