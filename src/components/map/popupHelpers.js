@@ -183,60 +183,43 @@ export function createVegetacionChartData(properties) {
 export function createSueloPopupContent(sueloData) {
   const props = sueloData.properties || {}
   
-  // Mapeo de colores según fertilidad
-  const fertilidadColors = {
-    'Ligeras': '#22c55e',
-    'Moderadas': '#eab308',
-    'Fuertes': '#ff8c00',
-    'Severas': '#ef4444',
-    'Sin datos': '#9ca3af'
-  }
-  
-  const fertilidad = props.fertilidad || 'Sin datos'
   const perfil = props.perfil || 'Sin perfil'
   const icon = '📍'
   const titleClass = 'text-teal-700'
-  const fertilidadColor = fertilidadColors[fertilidad] || '#808080'
+  
+  // Helper para mostrar valor o "S/I" si no existe
+  const getValue = (value) => value ? value : 'S/I'
 
   return `
     <div class="p-2 max-w-xs text-xs text-gray-700">
-      <h3 class="font-semibold text-sm ${titleClass} mb-2">
+      <h3 class="font-semibold text-sm ${titleClass} mb-3">
         ${icon} Muestra de Suelo (${perfil})
       </h3>
 
-      <div class="space-y-1">
-        <!-- Fertilidad -->
-        <div class="flex items-start gap-2">
-          <span class="font-medium whitespace-nowrap">Fertilidad:</span>
-          <div class="flex items-center gap-1">
-            <div class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${fertilidadColor}; border: 1px solid #333;"></div>
-            <span>${fertilidad}</span>
-          </div>
-        </div>
+      <!-- Gráfico de Vegetación -->
+      <div class="mb-3 border-b pb-3">
+        <h4 class="font-medium text-xs text-gray-800 mb-2">Composición de Vegetación</h4>
+        <div class="pie-chart-container-suelo" style="width: 100%; height: 140px; position: relative;"></div>
+      </div>
+
+      <div class="space-y-1.5">
+        <!-- Cobertura -->
+        <div><span class="font-medium">Cobertura:</span> ${getValue(props.cobertura)}${props.cobertura ? '%' : ''}</div>
 
         <!-- Profundidad -->
-        ${props.profundidad ? `<div><span class="font-medium">Profundidad:</span> ${props.profundidad}</div>` : ''}
+        <div><span class="font-medium">Profundidad:</span> ${getValue(props.profundidad)}</div>
 
         <!-- Pedregosidad -->
-        ${props.pedregosidad ? `<div><span class="font-medium">Pedregosidad:</span> ${props.pedregosidad}</div>` : ''}
+        <div><span class="font-medium">Pedregosidad:</span> ${getValue(props.pedregosidad)}</div>
 
         <!-- Drenaje -->
-        ${props.drenaje ? `<div><span class="font-medium">Drenaje:</span> ${props.drenaje}</div>` : ''}
+        <div><span class="font-medium">Drenaje:</span> ${getValue(props.drenaje)}</div>
 
         <!-- Erosión -->
-        ${props.erosion ? `<div><span class="font-medium">Erosión:</span> ${props.erosion}</div>` : ''}
+        <div><span class="font-medium">Erosión:</span> ${getValue(props.erosion)}</div>
 
-        <!-- Inundación -->
-        ${props.inundacion ? `<div><span class="font-medium">Inundación:</span> ${props.inundacion}</div>` : ''}
-
-        <!-- Gráfico de Vegetación -->
-        <div class="border-t pt-2 mt-2">
-          <h4 class="font-medium text-xs text-gray-800 mb-2">Composición de Vegetación</h4>
-          <div class="pie-chart-container-suelo" style="width: 100%; height: 150px; position: relative;"></div>
-        </div>
-
-        <!-- Observaciones -->
-        ${props.observaciones ? `<div class="border-t pt-2 mt-2"><span class="font-medium">Observaciones:</span> ${props.observaciones}</div>` : ''}
+        <!-- Textura -->
+        <div><span class="font-medium">Textura:</span> ${getValue(props.textura)}</div>
       </div>
     </div>
   `
