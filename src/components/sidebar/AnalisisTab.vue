@@ -79,8 +79,10 @@ function handleImageError(event) {
   console.warn(`Error cargando imagen: ${event.target.src}`)
 }
 
-// Cerrar dropdown al hacer clic afuera
-function closeDropdown() {
+// Limpiar la selección del potrero
+function clearSelection() {
+  selectedPotrero.value = ''
+  searchTerm.value = ''
   isDropdownOpen.value = false
 }
 </script>
@@ -139,13 +141,21 @@ function closeDropdown() {
             :disabled="isLoading"
             @focus="isDropdownOpen = true; updateDropdownPosition($event)"
             @input="updateDropdownPosition($event)"
-            class="w-full text-sm p-2 border border-slate-200 rounded-md bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-200 focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full text-sm p-2 pr-12 border border-slate-200 rounded-md bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-200 focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
           />
           
-          <!-- Icono de búsqueda -->
-          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-            🔍
-          </span>
+          <!-- Iconos de búsqueda y limpiar -->
+          <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            <button
+              v-if="searchTerm"
+              @click="clearFilter"
+              class="p-1 text-gray-400 hover:text-red-500 transition"
+              title="Limpiar filtro"
+            >
+              🗑️
+            </button>
+            <span class="text-gray-400 pointer-events-none">🔍</span>
+          </div>
         </div>
         
         <!-- Dropdown de opciones con posición fija -->
@@ -185,8 +195,16 @@ function closeDropdown() {
         </Teleport>
         
         <!-- Información del potrero seleccionado -->
-        <div v-if="selectedPotreroData" class="mt-2 p-2 bg-teal-50 rounded-md border border-teal-200">
-          <p class="text-xs text-gray-700">
+        <div v-if="selectedPotreroData" class="mt-2 p-2 bg-teal-50 rounded-md border border-teal-200 relative">
+          <button
+            @click="clearSelection"
+            class="absolute top-1 right-1 p-1 text-gray-400 hover:text-red-500 transition"
+            title="Limpiar selección"
+          >
+            ✕
+          </button>
+          
+          <p class="text-xs text-gray-700 pr-4">
             <strong class="text-teal-800">Potrero:</strong> 
             <span class="text-sm font-semibold text-teal-900">
               {{ selectedPotreroData.nombre }}
