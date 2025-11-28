@@ -92,14 +92,14 @@ function closeDropdown() {
     role="tabpanel" 
     aria-labelledby="tab-analisis"
   >
-    <section class="mb-6 relative z-10 overflow-visible">
-      <h2 class="mb-4 text-gray-800 text-base font-semibold font-montserrat border-b-2 border-teal-600 pb-2 relative uppercase tracking-wide z-10 after:content-[''] after:absolute after:-bottom-0.5 after:left-0 after:w-8 after:h-0.5 after:bg-gradient-to-r after:from-teal-600 after:to-blue-500 after:rounded-sm">
+    <section class="mb-3 relative z-10">
+      <h2 class="mb-2 text-gray-800 text-base font-semibold font-montserrat border-b-2 border-teal-600 pb-1 relative uppercase tracking-wide z-10 after:content-[''] after:absolute after:-bottom-0.5 after:left-0 after:w-8 after:h-0.5 after:bg-gradient-to-r after:from-teal-600 after:to-blue-500 after:rounded-sm">
         Información del Proyecto
       </h2>
-      <div class="py-2.5 border-b border-slate-200 font-normal leading-relaxed transition-all duration-300 relative z-10 text-gray-700 text-sm">
+      <div class="py-1.5 border-b border-slate-200 font-normal leading-tight transition-all duration-300 relative z-10 text-gray-700 text-sm">
         <strong>Parcela:</strong> La Palma
       </div>
-      <div class="py-2.5 border-b border-slate-200 font-normal leading-relaxed transition-all duration-300 relative z-10 text-gray-700 text-sm">
+      <div class="py-1.5 border-b border-slate-200 font-normal leading-tight transition-all duration-300 relative z-10 text-gray-700 text-sm">
         <strong>Superficie: </strong> 
         <span v-if="isLoading" class="text-teal-600">
           <svg class="inline animate-spin h-3 w-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -116,15 +116,15 @@ function closeDropdown() {
         </span>
         <span v-if="!isLoading && !error"> ha</span>
       </div>
-      <div class="py-2.5 border-b border-slate-200 font-normal leading-relaxed transition-all duration-300 relative z-10 text-gray-700 text-sm">
+      <div class="py-1.5 border-b border-slate-200 font-normal leading-tight transition-all duration-300 relative z-10 text-gray-700 text-sm">
         <strong>Total de Potreros: </strong> 
         <span v-if="isLoading" class="text-teal-600">...</span>
         <span v-else class="font-semibold text-teal-700">{{ totalPotreros }}</span>
       </div>
       
       <!-- Filtro de Potreros con Dropdown y Búsqueda -->
-      <div class="py-2.5 border-b border-slate-200 font-normal leading-relaxed transition-all duration-300 relative text-gray-700 text-sm">
-        <label for="search-potreros" class="block text-sm font-medium text-gray-700 mb-2">
+      <div class="py-1.5 border-b border-slate-200 font-normal leading-tight transition-all duration-300 relative text-gray-700 text-sm">
+        <label for="search-potreros" class="block text-xs font-medium text-gray-700 mb-1">
           Filtrar Potreros
         </label>
         
@@ -185,26 +185,25 @@ function closeDropdown() {
         </Teleport>
         
         <!-- Información del potrero seleccionado -->
-        <div v-if="selectedPotreroData" class="mt-3 p-3 bg-teal-50 rounded-md border border-teal-200">
+        <div v-if="selectedPotreroData" class="mt-2 p-2 bg-teal-50 rounded-md border border-teal-200">
           <p class="text-xs text-gray-700">
-            <strong class="text-teal-800">Potrero seleccionado:</strong><br>
+            <strong class="text-teal-800">Potrero:</strong> 
             <span class="text-sm font-semibold text-teal-900">
               {{ selectedPotreroData.nombre }}
             </span>
           </p>
-          <p class="text-xs text-gray-600 mt-1">
-            <strong>Superficie:</strong> 
-            {{ selectedPotreroData.superficie.toFixed(2) }} ha
+          <p class="text-xs text-gray-600 mt-0.5">
+            <strong>Superficie:</strong> {{ selectedPotreroData.superficie.toFixed(2) }} ha
           </p>
           
           <!-- Imagen del potrero desde Google Drive -->
-          <div v-if="selectedPotreroData.url_drive && selectedPotreroData.url_drive.iframeUrl" class="mt-4">
-            <p class="text-xs font-semibold text-gray-700 mb-2">Imagen del Potrero:</p>
+          <div v-if="selectedPotreroData.url_drive && selectedPotreroData.url_drive.iframeUrl" class="mt-2">
+            <p class="text-xs font-semibold text-gray-700 mb-1">Imagen del Potrero:</p>
             <div class="bg-white rounded-md border-2 border-teal-300 overflow-hidden">
               <!-- Mostrar iframe de Google Drive -->
               <iframe 
                 :src="selectedPotreroData.url_drive.iframeUrl" 
-                class="w-full h-64 border-0 block"
+                class="w-full h-48 border-0 block"
                 allow="autoplay"
               ></iframe>
             </div>

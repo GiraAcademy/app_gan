@@ -95,7 +95,7 @@ const tableConfig = computed(() => {
 
 // Clases del contenedor principal
 const mainContainerClasses = computed(() => {
-  const baseClasses = 'h-full relative grid'
+  const baseClasses = 'h-[calc(100vh-64px)] relative grid overflow-hidden'
   
   // Desktop: siempre mostrar sidebar
   if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
@@ -254,7 +254,7 @@ function handleResetSelection() {
       />
 
       <!-- Map Container -->
-      <div class="flex-1 relative">
+      <div class="flex-1 relative h-full overflow-hidden">
         <MapContainer 
           ref="mapContainerRef"
           :layers="layers"
