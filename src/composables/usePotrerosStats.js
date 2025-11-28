@@ -50,6 +50,43 @@ export function usePotrerosStats() {
   })
 
   /**
+   * Convierte URL de Google Drive a formato embebible de imagen
+   */
+  function convertGoogleDriveUrl(url) {
+    if (!url) return null
+    
+    // Extraer el ID del Google Drive
+    let driveId = null
+    
+    // Formato: https://drive.google.com/uc?export=view&id=ID
+    const exportMatch = url.match(/[?&]id=([a-zA-Z0-9-_]+)/)
+    if (exportMatch && exportMatch[1]) {
+      driveId = exportMatch[1]
+    }
+    
+    // Formato: https://drive.google.com/file/d/ID/view
+    const fileMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/)
+    if (fileMatch && fileMatch[1]) {
+      driveId = fileMatch[1]
+    }
+    
+    // Si encontramos un ID, devolver objeto con URLs
+    if (driveId) {
+      // Usar iframe embed que Google Drive permite
+      const iframeUrl = `https://drive.google.com/file/d/${driveId}/preview`
+      // URL para ver en Google Drive
+      const viewUrl = `https://drive.google.com/file/d/${driveId}/view`
+      return {
+        id: driveId,
+        viewUrl: viewUrl,
+        iframeUrl: iframeUrl
+      }
+    }
+    
+    return { id: null, viewUrl: url, iframeUrl: null }
+  }
+
+  /**
    * Obtiene la lista de nombres de potreros ordenados alfabéticamente
    */
   const potrerosNames = computed(() => {
@@ -61,7 +98,8 @@ export function usePotrerosStats() {
       .map(feature => ({
         id: feature.properties?.id,
         nombre: feature.properties?.nombre || 'Sin nombre',
-        superficie: feature.properties?.super_ha || 0
+        superficie: feature.properties?.super_ha || 0,
+        url_drive: convertGoogleDriveUrl(feature.properties?.url_drive)
       }))
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
   })
@@ -84,6 +122,7 @@ export function usePotrerosStats() {
       id: feature.properties?.id,
       nombre: feature.properties?.nombre || 'Sin nombre',
       superficie: feature.properties?.super_ha || 0,
+      url_drive: convertGoogleDriveUrl(feature.properties?.url_drive),
       geometry: feature.geometry
     }
   }

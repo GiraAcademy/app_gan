@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { usePotrerosStats } from '@/composables/usePotrerosStats'
 
 const emit = defineEmits(['selectPotrero'])
@@ -22,6 +22,12 @@ onMounted(async () => {
   await loadPotrerosData()
 })
 
+// Computed para obtener el potrero seleccionado
+const selectedPotreroData = computed(() => {
+  if (!selectedPotrero.value) return null
+  return potrerosNames.value.find(p => p.id == selectedPotrero.value)
+})
+
 // Watch para emitir cuando cambia la selección
 watch(selectedPotrero, (newPotreroId) => {
   if (newPotreroId) {
@@ -34,6 +40,11 @@ watch(selectedPotrero, (newPotreroId) => {
     emit('selectPotrero', null)
   }
 })
+
+// Manejar error de carga de imagen
+function handleImageError(event) {
+  console.warn(`Error cargando imagen: ${event.target.src}`)
+}
 </script>
 
 <template>
@@ -97,17 +108,33 @@ watch(selectedPotrero, (newPotreroId) => {
         </select>
         
         <!-- Información del potrero seleccionado -->
-        <div v-if="selectedPotrero" class="mt-3 p-3 bg-teal-50 rounded-md border border-teal-200">
+        <div v-if="selectedPotreroData" class="mt-3 p-3 bg-teal-50 rounded-md border border-teal-200">
           <p class="text-xs text-gray-700">
             <strong class="text-teal-800">Potrero seleccionado:</strong><br>
             <span class="text-sm font-semibold text-teal-900">
-              {{ potrerosNames.find(p => p.id === selectedPotrero)?.nombre }}
+              {{ selectedPotreroData.nombre }}
             </span>
           </p>
           <p class="text-xs text-gray-600 mt-1">
             <strong>Superficie:</strong> 
-            {{ potrerosNames.find(p => p.id === selectedPotrero)?.superficie.toFixed(2) }} ha
+            {{ selectedPotreroData.superficie.toFixed(2) }} ha
           </p>
+          
+          <!-- Imagen del potrero desde Google Drive -->
+          <div v-if="selectedPotreroData.url_drive && selectedPotreroData.url_drive.iframeUrl" class="mt-4">
+            <p class="text-xs font-semibold text-gray-700 mb-2">Imagen del Potrero:</p>
+            <div class="bg-white rounded-md border-2 border-teal-300 overflow-hidden">
+              <!-- Mostrar iframe de Google Drive -->
+              <iframe 
+                :src="selectedPotreroData.url_drive.iframeUrl" 
+                class="w-full h-64 border-0 block"
+                allow="autoplay"
+              ></iframe>
+            </div>
+          </div>
+          <div v-else class="mt-4">
+            <p class="text-xs text-gray-500 italic">Sin imagen disponible para este potrero</p>
+          </div>
         </div>
       </div>
     </section>
