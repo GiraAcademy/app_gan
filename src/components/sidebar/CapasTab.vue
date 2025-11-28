@@ -319,31 +319,31 @@ function getLayerError(layerId) {
       <div class="space-y-2 text-xs">
         <!-- Ligeras -->
         <div class="flex items-center gap-3">
-          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #6495ED;"></div>
+          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #22c55e;"></div>
           <span class="text-gray-700">Ligeras</span>
         </div>
 
         <!-- Moderadas -->
         <div class="flex items-center gap-3">
-          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #00AA00;"></div>
+          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #eab308;"></div>
           <span class="text-gray-700">Moderadas</span>
         </div>
 
         <!-- Fuertes -->
         <div class="flex items-center gap-3">
-          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #FF8C00;"></div>
+          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #ff8c00;"></div>
           <span class="text-gray-700">Fuertes</span>
         </div>
 
         <!-- Severas -->
         <div class="flex items-center gap-3">
-          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #FF0000;"></div>
+          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #ef4444;"></div>
           <span class="text-gray-700">Severas</span>
         </div>
 
         <!-- Sin datos -->
         <div class="flex items-center gap-3">
-          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #808080;"></div>
+          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #9ca3af;"></div>
           <span class="text-gray-700">Sin datos</span>
         </div>
       </div>

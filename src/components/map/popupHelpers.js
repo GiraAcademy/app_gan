@@ -185,11 +185,11 @@ export function createSueloPopupContent(sueloData) {
   
   // Mapeo de colores según fertilidad
   const fertilidadColors = {
-    'Ligeras': '#6495ED',
-    'Moderadas': '#00AA00',
-    'Fuertes': '#FF8C00',
-    'Severas': '#FF0000',
-    'Sin datos': '#808080'
+    'Ligeras': '#22c55e',
+    'Moderadas': '#eab308',
+    'Fuertes': '#ff8c00',
+    'Severas': '#ef4444',
+    'Sin datos': '#9ca3af'
   }
   
   const fertilidad = props.fertilidad || 'Sin datos'

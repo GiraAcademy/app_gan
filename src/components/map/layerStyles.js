@@ -8,7 +8,7 @@
 export const potreroDefaultStyle = {
   color: '#00CBA9',
   fillColor: '#00CBA9',
-  fillOpacity: 0.25,
+  fillOpacity: 0.1,
   weight: 2
 }
 
@@ -131,39 +131,39 @@ export const sueloHoverStyle = {
 
 /**
  * Función de estilo dinámico para puntos de suelo según fertilidad
- * Ligeras: Azul claro (#6495ED)
- * Moderadas: Verde (#00AA00)
- * Fuertes: Naranja (#FF8C00)
- * Severas: Rojo (#FF0000)
- * Sin datos: Gris (#808080)
+ * Ligeras: Verde (#22c55e)
+ * Moderadas: Amarillo (#eab308)
+ * Fuertes: Naranja (#ff8c00)
+ * Severas: Rojo (#ef4444)
+ * Sin datos: Gris (#9ca3af)
  */
 export function getSueloStyle(feature) {
   const fertilidad = feature?.properties?.fertilidad || 'Sin datos'
   
   const colorMap = {
     'Ligeras': {
-      fillColor: '#6495ED',
-      color: '#4169E1',
+      fillColor: '#22c55e',
+      color: '#15803d',
       radius: 6
     },
     'Moderadas': {
-      fillColor: '#00AA00',
-      color: '#006400',
+      fillColor: '#eab308',
+      color: '#ca8a04',
       radius: 6
     },
     'Fuertes': {
-      fillColor: '#FF8C00',
-      color: '#FF6347',
+      fillColor: '#ff8c00',
+      color: '#dc6900',
       radius: 6
     },
     'Severas': {
-      fillColor: '#FF0000',
-      color: '#DC143C',
+      fillColor: '#ef4444',
+      color: '#dc2626',
       radius: 6
     },
     'Sin datos': {
-      fillColor: '#808080',
-      color: '#505050',
+      fillColor: '#9ca3af',
+      color: '#6b7280',
       radius: 6
     }
   }
