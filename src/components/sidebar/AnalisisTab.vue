@@ -98,10 +98,10 @@ function clearSelection() {
       <h2 class="mb-2 text-gray-800 text-base font-semibold font-montserrat border-b-2 border-teal-600 pb-1 relative uppercase tracking-wide z-10 after:content-[''] after:absolute after:-bottom-0.5 after:left-0 after:w-8 after:h-0.5 after:bg-gradient-to-r after:from-teal-600 after:to-blue-500 after:rounded-sm">
         Información del Proyecto
       </h2>
-      <div class="py-1.5 border-b border-slate-200 font-normal leading-tight transition-all duration-300 relative z-10 text-gray-700 text-sm">
+      <div class="py-1.5 border-b border-slate-200 font-normal leading-tight transition-all duration-300 relative z-10 text-gray-700 text-xs">
         <strong>Parcela:</strong> La Palma
       </div>
-      <div class="py-1.5 border-b border-slate-200 font-normal leading-tight transition-all duration-300 relative z-10 text-gray-700 text-sm">
+      <div class="py-1.5 border-b border-slate-200 font-normal leading-tight transition-all duration-300 relative z-10 text-gray-700 text-xs">
         <strong>Superficie: </strong> 
         <span v-if="isLoading" class="text-teal-600">
           <svg class="inline animate-spin h-3 w-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -118,14 +118,14 @@ function clearSelection() {
         </span>
         <span v-if="!isLoading && !error"> ha</span>
       </div>
-      <div class="py-1.5 border-b border-slate-200 font-normal leading-tight transition-all duration-300 relative z-10 text-gray-700 text-sm">
+      <div class="py-1.5 border-b border-slate-200 font-normal leading-tight transition-all duration-300 relative z-10 text-gray-700 text-xs">
         <strong>Total de Potreros: </strong> 
         <span v-if="isLoading" class="text-teal-600">...</span>
         <span v-else class="font-semibold text-teal-700">{{ totalPotreros }}</span>
       </div>
       
       <!-- Filtro de Potreros con Dropdown y Búsqueda -->
-      <div class="py-1.5 border-b border-slate-200 font-normal leading-tight transition-all duration-300 relative text-gray-700 text-sm">
+      <div class="py-1.5 border-b border-slate-200 font-normal leading-tight transition-all duration-300 relative text-gray-700 text-xs">
         <label for="search-potreros" class="block text-xs font-medium text-gray-700 mb-1">
           Filtrar Potreros
         </label>
@@ -141,7 +141,7 @@ function clearSelection() {
             :disabled="isLoading"
             @focus="isDropdownOpen = true; updateDropdownPosition($event)"
             @input="updateDropdownPosition($event)"
-            class="w-full text-sm p-2 pr-12 border border-slate-200 rounded-md bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-200 focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full text-xs p-2 pr-12 border border-slate-200 rounded-md bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-200 focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
           />
           
           <!-- Iconos de búsqueda y limpiar -->
@@ -173,7 +173,7 @@ function clearSelection() {
               v-for="potrero in filteredPotreros" 
               :key="potrero.id"
               @click="selectPotrero(potrero.id)"
-              class="px-3 py-2 hover:bg-teal-50 cursor-pointer transition text-sm text-gray-700 flex justify-between items-center border-b border-slate-100 last:border-b-0"
+              class="px-3 py-2 hover:bg-teal-50 cursor-pointer transition text-xs text-gray-700 flex justify-between items-center border-b border-slate-100 last:border-b-0"
             >
               <span>{{ potrero.nombre }}</span>
               <span class="text-xs text-gray-500">{{ potrero.superficie.toFixed(1) }} ha</span>
@@ -183,7 +183,7 @@ function clearSelection() {
           <!-- Mensaje cuando no hay resultados -->
           <div 
             v-if="isDropdownOpen && filteredPotreros.length === 0"
-            class="fixed bg-white border border-slate-200 rounded-md shadow-xl z-50 p-3 text-center text-gray-500 text-sm"
+            class="fixed bg-white border border-slate-200 rounded-md shadow-xl z-50 p-3 text-center text-gray-500 text-xs"
             :style="{
               top: dropdownPosition.top + 'px',
               left: dropdownPosition.left + 'px',
@@ -206,7 +206,7 @@ function clearSelection() {
           
           <p class="text-xs text-gray-700 pr-4">
             <strong class="text-teal-800">Potrero:</strong> 
-            <span class="text-sm font-semibold text-teal-900">
+            <span class="text-xs font-semibold text-teal-900">
               {{ selectedPotreroData.nombre }}
             </span>
           </p>

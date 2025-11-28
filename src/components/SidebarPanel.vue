@@ -25,7 +25,7 @@ const props = defineProps({
 
 // Clases del sidebar
 const sidebarClasses = computed(() => {
-  const baseClasses = 'bg-white flex flex-col h-full transition-all duration-300 ease-in-out'
+  const baseClasses = 'bg-white flex flex-col h-full overflow-hidden transition-all duration-300 ease-in-out'
   
   // Desktop: always visible and full width
   const desktopClasses = 'lg:block lg:w-80'
@@ -63,7 +63,7 @@ function handleToggleAttributeTable(layerType) {
     aria-label="Navegación de pestañas"
   >
     <!-- Tabs Navigation -->
-    <ul class="list-none m-0 p-0 flex border-b-2 border-gray-100 bg-white" role="tablist" aria-orientation="horizontal">
+    <ul class="list-none m-0 p-0 flex border-b-2 border-gray-100 bg-white flex-shrink-0" role="tablist" aria-orientation="horizontal">
       <li class="flex-1 flex" role="presentation">
         <button 
           @click="switchTab('capas')"
@@ -111,7 +111,7 @@ function handleToggleAttributeTable(layerType) {
     </section>
 
     <!-- Footer con copyright -->
-    <footer class="px-5 py-4 border-t border-gray-200 bg-white">
+    <footer class="px-5 py-4 border-t border-gray-200 bg-white flex-shrink-0">
       <p class="text-center text-xs text-gray-500">
         © 2025 <strong class="font-semibold text-teal-700">GIRA</strong> - Grupo de Investigación en<br>
         Recursos Agrícolas

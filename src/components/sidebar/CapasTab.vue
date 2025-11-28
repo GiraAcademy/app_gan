@@ -158,7 +158,7 @@ function getLayerError(layerId) {
     aria-labelledby="tab-capas"
   >
     <!-- Capas Base Section -->
-    <section class="mb-6 relative z-10" aria-labelledby="base-layers-heading">
+    <section class="mb-2 relative z-10" aria-labelledby="base-layers-heading">
       <h2 
         id="base-layers-heading"
         class="mb-4 text-gray-800 text-base font-semibold font-montserrat border-b-2 border-teal-600 pb-2 relative uppercase tracking-wide z-10 after:content-[''] after:absolute after:-bottom-0.5 after:left-0 after:w-8 after:h-0.5 after:bg-gradient-to-r after:from-teal-600 after:to-blue-500 after:rounded-sm"
@@ -199,7 +199,7 @@ function getLayerError(layerId) {
     </section>
 
     <!-- Datos Vectoriales Section -->
-    <section class="mb-6 relative z-10" aria-labelledby="vector-layers-heading">
+    <section class="mb-2 relative z-10" aria-labelledby="vector-layers-heading">
       <h2 
         id="vector-layers-heading"
         class="mb-4 text-gray-800 text-base font-semibold font-montserrat border-b-2 border-teal-600 pb-2 relative uppercase tracking-wide z-10 after:content-[''] after:absolute after:-bottom-0.5 after:left-0 after:w-8 after:h-0.5 after:bg-gradient-to-r after:from-teal-600 after:to-blue-500 after:rounded-sm"
@@ -281,70 +281,65 @@ function getLayerError(layerId) {
       </ul>
     </section>
 
-    <!-- Leyenda de Bosques Section -->
-    <section class="mb-6 relative z-10" aria-labelledby="bosques-legend-heading">
-      <h2
-        id="bosques-legend-heading"
-        class="mb-4 text-gray-800 text-base font-semibold font-montserrat border-b-2 border-teal-600 pb-2 relative uppercase tracking-wide z-10 after:content-[''] after:absolute after:-bottom-0.5 after:left-0 after:w-8 after:h-0.5 after:bg-gradient-to-r after:from-teal-600 after:to-blue-500 after:rounded-sm"
-      >
-        Leyenda de Bosques
+    <!-- Leyenda Section Principal -->
+    <section class="mb-2 relative z-10">
+      <h2 class="mb-4 text-gray-800 text-base font-semibold font-montserrat border-b-2 border-teal-600 pb-2 relative uppercase tracking-wide z-10 after:content-[''] after:absolute after:-bottom-0.5 after:left-0 after:w-8 after:h-0.5 after:bg-gradient-to-r after:from-teal-600 after:to-blue-500 after:rounded-sm">
+        Leyenda
       </h2>
 
-      <div class="space-y-2">
+      <!-- Subtítulo: Bosques -->
+      <h3 class="mb-2 text-xs font-semibold text-gray-700 mt-3">Bosques</h3>
+      <div class="space-y-2 mb-4">
         <!-- Laguna -->
         <div class="flex items-center gap-3">
           <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #0066CC;"></div>
-          <span class="text-sm text-gray-700">Laguna</span>
+          <span class="text-xs text-gray-700">Laguna</span>
         </div>
 
         <!-- Vegetación boscosa -->
         <div class="flex items-center gap-3">
           <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #006400;"></div>
-          <span class="text-sm text-gray-700">Vegetación boscosa</span>
+          <span class="text-xs text-gray-700">Vegetación boscosa</span>
         </div>
 
         <!-- Área agropecuaria -->
         <div class="flex items-center gap-3">
           <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #F5DEB3;"></div>
-          <span class="text-sm text-gray-700">Área agropecuaria</span>
+          <span class="text-xs text-gray-700">Área agropecuaria</span>
         </div>
       </div>
-    </section>
 
-    <!-- Leyenda de Fertilidad de Suelo -->
-    <section class="mt-4 space-y-3">
-      <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-        <span>🌱 Fertilidad de Suelo</span>
-      </h3>
-      <div class="space-y-2 text-xs">
+      <!-- Subtítulo: Fertilidad de Suelo -->
+      <h3 class="mb-2 text-xs font-semibold text-gray-700 mt-3">🌱 Fertilidad de Suelo</h3>
+      <div class="space-y-2">
         <!-- Ligeras -->
         <div class="flex items-center gap-3">
-          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #22c55e;"></div>
-          <span class="text-gray-700">Ligeras</span>
+          <div class="w-4 h-4 rounded-full border border-gray-300" style="background-color: #22c55e;"></div>
+          <span class="text-xs text-gray-700">Ligeras</span>
         </div>
 
         <!-- Moderadas -->
         <div class="flex items-center gap-3">
-          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #eab308;"></div>
-          <span class="text-gray-700">Moderadas</span>
+          <div class="w-4 h-4 rounded-full border border-gray-300" style="background-color: #eab308;"></div>
+          <span class="text-xs text-gray-700">Moderadas</span>
         </div>
 
         <!-- Fuertes -->
         <div class="flex items-center gap-3">
-          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #ff8c00;"></div>
-          <span class="text-gray-700">Fuertes</span>
+          <div class="w-4 h-4 rounded-full border border-gray-300" style="background-color: #ff8c00;"></div>
+          <span class="text-xs text-gray-700">Fuertes</span>
         </div>
 
         <!-- Severas -->
         <div class="flex items-center gap-3">
-          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #ef4444;"></div>
-          <span class="text-gray-700">Severas</span>
+          <div class="w-4 h-4 rounded-full border border-gray-300" style="background-color: #ef4444;"></div>
+          <span class="text-xs text-gray-700">Severas</span>
         </div>
 
         <!-- Sin datos -->
         <div class="flex items-center gap-3">
-          <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: #9ca3af;"></div>
-          <span class="text-gray-700">Sin datos</span>
+          <div class="w-4 h-4 rounded-full border border-gray-300" style="background-color: #9ca3af;"></div>
+          <span class="text-xs text-gray-700">Sin datos</span>
         </div>
       </div>
     </section>
