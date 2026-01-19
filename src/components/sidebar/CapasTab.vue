@@ -21,6 +21,7 @@ const props = defineProps({
       perimetro: true,
       bosques: true,
       mde: false,
+      pendiente: false,
       suelo: true
     })
   }
@@ -40,7 +41,14 @@ const baseLayers = ref([
     name: 'Modelo Digital de Elevación',
     icon: '🏔️',
     enabled: false,
-    description: 'Capa raster MDE desde API'
+    description: 'Capa raster WMS que muestra la elevación del terreno desde GeoServer GIRA360'
+  },
+  {
+    id: 'pendiente',
+    name: 'Pendiente',
+    icon: '📐',
+    enabled: false,
+    description: 'Capa raster WMS que muestra la inclinación del terreno desde GeoServer GIRA360'
   }
 ])
 
@@ -91,7 +99,7 @@ watch(() => props.layersState, (newState) => {
       layer.enabled = newState[layer.id]
     }
   })
-  
+
   // Actualizar capas vectoriales
   vectorLayers.value.forEach(layer => {
     if (newState[layer.id] !== undefined) {
@@ -120,7 +128,7 @@ function toggleLayer(layerId) {
     emit('toggleLayer', layerId, newState)
     return
   }
-  
+
   // Buscar en capas vectoriales
   const vectorLayer = vectorLayers.value.find(l => l.id === layerId)
   if (vectorLayer) {
@@ -151,39 +159,39 @@ function getLayerError(layerId) {
 </script>
 
 <template>
-  <section 
-    id="capas" 
-    class="tab-panel sidebar-content w-full p-5" 
-    role="tabpanel" 
+  <section
+    id="capas"
+    class="tab-panel sidebar-content w-full p-5"
+    role="tabpanel"
     aria-labelledby="tab-capas"
   >
     <!-- Capas Base Section -->
     <section class="mb-2 relative z-10" aria-labelledby="base-layers-heading">
-      <h2 
+      <h2
         id="base-layers-heading"
         class="mb-4 text-gray-800 text-base font-semibold font-montserrat border-b-2 border-teal-600 pb-2 relative uppercase tracking-wide z-10 after:content-[''] after:absolute after:-bottom-0.5 after:left-0 after:w-8 after:h-0.5 after:bg-gradient-to-r after:from-teal-600 after:to-blue-500 after:rounded-sm"
       >
         Capas Base
       </h2>
-      
+
       <ul class="list-none m-0 p-0" role="list">
-        <li 
-          v-for="layer in baseLayers" 
+        <li
+          v-for="layer in baseLayers"
           :key="layer.id"
           class="py-2.5 border-b border-slate-200 last:border-b-0"
         >
           <div class="flex items-center gap-2.5 transition-all duration-300 hover:pl-4 hover:bg-teal-50 hover:-mx-2.5 hover:pr-2.5 hover:rounded-md group">
-            <input 
+            <input
               :id="layer.id"
-              type="checkbox" 
+              type="checkbox"
               :checked="layer.enabled"
               @change="toggleLayer(layer.id)"
               :aria-checked="layer.enabled"
               :aria-describedby="`${layer.id}-description`"
               class="w-[18px] h-[18px] accent-teal-600 cursor-pointer transition-transform hover:scale-110 focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
             >
-            <label 
-              :for="layer.id" 
+            <label
+              :for="layer.id"
               class="flex-1 cursor-pointer text-sm text-gray-700 font-normal select-none group-hover:text-gray-800 transition-colors"
             >
               <span class="mr-1.5">{{ layer.icon }}</span>
@@ -200,23 +208,23 @@ function getLayerError(layerId) {
 
     <!-- Datos Vectoriales Section -->
     <section class="mb-2 relative z-10" aria-labelledby="vector-layers-heading">
-      <h2 
+      <h2
         id="vector-layers-heading"
         class="mb-4 text-gray-800 text-base font-semibold font-montserrat border-b-2 border-teal-600 pb-2 relative uppercase tracking-wide z-10 after:content-[''] after:absolute after:-bottom-0.5 after:left-0 after:w-8 after:h-0.5 after:bg-gradient-to-r after:from-teal-600 after:to-blue-500 after:rounded-sm"
       >
         Datos Vectoriales
       </h2>
-      
+
       <ul class="list-none m-0 p-0" role="list">
-        <li 
-          v-for="layer in vectorLayers" 
+        <li
+          v-for="layer in vectorLayers"
           :key="layer.id"
           class="py-2.5 border-b border-slate-200 last:border-b-0"
         >
           <div class="flex items-center gap-2.5 transition-all duration-300 hover:pl-4 hover:bg-teal-50 hover:-mx-2.5 hover:pr-2.5 hover:rounded-md group">
-            <input 
+            <input
               :id="layer.id"
-              type="checkbox" 
+              type="checkbox"
               :checked="layer.enabled"
               @change="toggleLayer(layer.id)"
               :disabled="isLayerLoading(layer.id)"
@@ -224,16 +232,16 @@ function getLayerError(layerId) {
               :aria-describedby="`${layer.id}-description`"
               class="w-[18px] h-[18px] accent-teal-600 cursor-pointer transition-transform hover:scale-110 focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-            <label 
-              :for="layer.id" 
+            <label
+              :for="layer.id"
               class="flex-1 cursor-pointer text-sm text-gray-700 font-normal select-none group-hover:text-gray-800 transition-colors"
               :class="{ 'opacity-50': isLayerLoading(layer.id) }"
             >
               <span class="mr-1.5">{{ layer.icon }}</span>
               <span>{{ layer.name }}</span>
-              
+
               <!-- Indicador de carga -->
-              <span 
+              <span
                 v-if="isLayerLoading(layer.id)"
                 class="ml-2 inline-flex items-center text-xs text-teal-600"
               >
@@ -244,9 +252,9 @@ function getLayerError(layerId) {
                 Cargando...
               </span>
             </label>
-            
+
             <!-- Botón de atributos (solo si la capa lo soporta y no está cargando) -->
-            <button 
+            <button
               v-if="layer.hasAttributes && !isLayerLoading(layer.id)"
               @click="showLayerAttributes(layer.id)"
               type="button"
@@ -254,9 +262,9 @@ function getLayerError(layerId) {
               class="ml-2 p-1.5 rounded-md text-gray-600 hover:bg-teal-100 hover:text-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-colors"
               title="Ver atributos"
             >
-              <svg 
-                class="w-4 h-4" 
-                fill="currentColor" 
+              <svg
+                class="w-4 h-4"
+                fill="currentColor"
                 viewBox="0 0 20 20"
                 aria-hidden="true"
               >
@@ -264,15 +272,15 @@ function getLayerError(layerId) {
               </svg>
             </button>
           </div>
-          
+
           <!-- Mensaje de error si existe -->
-          <div 
-            v-if="getLayerError(layer.id)" 
+          <div
+            v-if="getLayerError(layer.id)"
             class="mt-2 ml-7 text-xs text-red-600 bg-red-50 px-2 py-1 rounded border border-red-200"
           >
             <span class="font-semibold">⚠️ Error:</span> {{ getLayerError(layer.id) }}
           </div>
-          
+
           <!-- Descripción oculta para screen readers -->
           <span :id="`${layer.id}-description`" class="sr-only">
             {{ layer.description }}

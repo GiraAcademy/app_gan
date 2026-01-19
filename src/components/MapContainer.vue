@@ -37,6 +37,7 @@ import { logBosquesCacheInfo } from '@/utils/cacheUtils'
 import {
   createSatelliteLayer,
   createMdeLayer,
+  createPendienteLayer,
   initialMapConfig
 } from '@/components/map/baseLayersConfig'
 import {
@@ -80,6 +81,7 @@ const mapInstance = ref(null)
 
 let satelliteLayer = null
 let mdeLayer = null
+let pendienteLayer = null
 let potrerosLayer = null
 let perimetroLayer = null
 let bosquesLayer = null
@@ -539,6 +541,7 @@ onMounted(async () => {
 
   satelliteLayer = createSatelliteLayer(L)
   mdeLayer = createMdeLayer(L)
+  pendienteLayer = createPendienteLayer(L)
   potrerosLayer = potrerosGeoJSON.value
     ? createLayer(potrerosGeoJSON.value)
     : L.layerGroup()
@@ -562,6 +565,7 @@ onMounted(async () => {
 
   if (props.layers?.satellite) satelliteLayer.addTo(mapInstance.value)
   if (props.layers?.mde) mdeLayer.addTo(mapInstance.value)
+  if (props.layers?.pendiente) pendienteLayer.addTo(mapInstance.value)
   if (props.layers?.perimetro) perimetroLayer.addTo(mapInstance.value)
   if (props.layers?.bosques) bosquesLayer.addTo(mapInstance.value)
   if (props.layers?.potreros) potrerosLayer.addTo(mapInstance.value)
@@ -574,6 +578,7 @@ watch(() => props.layers, (newLayers) => {
 
   toggleLayer({ map: mapInstance.value, layer: satelliteLayer, shouldShow: newLayers.satellite })
   toggleLayer({ map: mapInstance.value, layer: mdeLayer, shouldShow: newLayers.mde })
+  toggleLayer({ map: mapInstance.value, layer: pendienteLayer, shouldShow: newLayers.pendiente })
   toggleLayer({ map: mapInstance.value, layer: perimetroLayer, shouldShow: newLayers.perimetro })
   toggleLayer({ map: mapInstance.value, layer: potrerosLayer, shouldShow: newLayers.potreros })
 
@@ -604,7 +609,7 @@ watch(() => props.selectedPotrero, (potreroData, oldPotreroData) => {
     }, 'default')
     oldLayer.setPopupContent(popupContent)
     oldLayer.options.popupOptions = potreroPopupOptions.default
-    
+
     // Si el popup está abierto, actualizar el gráfico
     if (mapInstance.value.hasLayer(oldLayer) && oldLayer.getPopup() && oldLayer.getPopup().isOpen()) {
       setTimeout(() => createPopupChart(oldLayer.feature.properties), 100)
@@ -621,7 +626,7 @@ watch(() => props.selectedPotrero, (potreroData, oldPotreroData) => {
     }, 'selected')
     newLayer.setPopupContent(popupContent)
     newLayer.options.popupOptions = potreroPopupOptions.selected
-    
+
     // Si el popup está abierto, actualizar el gráfico
     if (mapInstance.value.hasLayer(newLayer) && newLayer.getPopup() && newLayer.getPopup().isOpen()) {
       setTimeout(() => createPopupChart(newLayer.feature.properties), 100)
@@ -665,7 +670,7 @@ defineExpose({
       }, 'default')
       layer.setPopupContent(popupContent)
       layer.options.popupOptions = potreroPopupOptions.default
-      
+
       // Si el popup está abierto, actualizar el gráfico
       if (mapInstance.value.hasLayer(layer) && layer.getPopup() && layer.getPopup().isOpen()) {
         setTimeout(() => createPopupChart(layer.feature.properties), 100)
@@ -700,7 +705,7 @@ defineExpose({
             radius: 10
           }
           layer.setStyle(highlightStyle)
-          
+
           // Centrar el mapa en el feature
           if (layer.getLatLng) {
             mapInstance.value.setView(layer.getLatLng(), 15)

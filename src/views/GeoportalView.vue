@@ -18,6 +18,7 @@ const layers = ref({
   perimetro: true,
   bosques: false, // Desactivada por defecto para mejorar rendimiento inicial
   mde: false,
+  pendiente: false,
   suelo: true
 })
 
@@ -96,12 +97,12 @@ const tableConfig = computed(() => {
 // Clases del contenedor principal
 const mainContainerClasses = computed(() => {
   const baseClasses = 'h-[calc(100vh-64px)] relative grid overflow-hidden'
-  
+
   // Desktop: siempre mostrar sidebar
   if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
     return `${baseClasses} grid-cols-[320px_1fr]`
   }
-  
+
   // Mobile: ajustar columnas según estado del sidebar
   const gridCols = sidebarOpen.value ? 'grid-cols-[320px_1fr]' : 'grid-cols-[0px_1fr]'
   return `${baseClasses} ${gridCols}`
@@ -110,7 +111,7 @@ const mainContainerClasses = computed(() => {
 // Preparar datos para la tabla de atributos
 const tableData = computed(() => {
   let data = null
-  
+
   // Seleccionar los datos según el tipo de capa actual
   switch (currentLayerType.value) {
     case 'potreros':
@@ -128,20 +129,20 @@ const tableData = computed(() => {
     default:
       data = potrerosData.value // fallback
   }
-  
+
   if (!data || !data.features) return []
-  
+
   return data.features.map((feature, index) => {
     // Obtener el tipo de geometría
     const geometryType = feature.geometry?.type || '-'
-    
+
     // Construir objeto con todas las propiedades
     const rowData = {
       id: index + 1,
       geometry: geometryType,
       ...feature.properties
     }
-    
+
     return rowData
   })
 })
@@ -149,17 +150,17 @@ const tableData = computed(() => {
 // Columnas de la tabla - usar configuración o generar dinámicamente
 const tableColumns = computed(() => {
   const config = tableConfig.value
-  
+
   // Si la configuración tiene columnas definidas, usarlas
   if (config.columns && config.columns.length > 0) {
     return config.columns
   }
-  
+
   // Si no, generar desde los datos
   if (tableData.value.length > 0) {
     return generateColumnsFromData(tableData.value)
   }
-  
+
   // Columnas por defecto
   return [
     { key: 'id', label: 'ID', minWidth: '80px' },
@@ -173,14 +174,14 @@ function handleTableRowSelected(row) {
   if (currentLayerType.value === 'potreros') {
     // El row.id es el índice + 1 (lo agregamos en tableData)
     const featureIndex = row.id - 1
-    
+
     // Obtener el feature completo del GeoJSON original
     if (potrerosData.value?.features && potrerosData.value.features[featureIndex]) {
       const feature = potrerosData.value.features[featureIndex]
-      
+
       // Normalizar los datos usando el helper reutilizable
       const potreroData = normalizePotreroData(feature)
-      
+
       // Pasar al manejador principal de selección
       if (potreroData) {
         handleSelectPotrero(potreroData)
@@ -188,10 +189,10 @@ function handleTableRowSelected(row) {
     } else {
       // Fallback: buscar por propiedades si el índice no funciona
       const feature = potrerosData.value?.features.find(
-        f => f.properties?.gid === row.gid || 
+        f => f.properties?.gid === row.gid ||
              f.properties?.nombre === row.nombre
       )
-      
+
       if (feature) {
         const potreroData = normalizePotreroData(feature)
         if (potreroData) {
@@ -202,11 +203,11 @@ function handleTableRowSelected(row) {
   } else if (currentLayerType.value === 'suelo') {
     // Manejar selección de suelo
     const featureIndex = row.id - 1
-    
+
     // Obtener el feature completo del GeoJSON original
     if (sueloData.value?.features && sueloData.value.features[featureIndex]) {
       const feature = sueloData.value.features[featureIndex]
-      
+
       // Emitir evento para seleccionar el suelo en el mapa
       if (mapContainerRef.value && mapContainerRef.value.selectSueloFeature) {
         mapContainerRef.value.selectSueloFeature(feature)
@@ -225,7 +226,7 @@ function handleExportData(data) {
 function handleResetSelection() {
   // Limpiar selección del potrero
   selectedPotrero.value = null
-  
+
   // Limpiar selección visual en el mapa
   if (mapContainerRef.value) {
     mapContainerRef.value.clearSelection()
@@ -241,7 +242,7 @@ function handleResetSelection() {
     <!-- Main Content -->
     <div :class="mainContainerClasses">
       <!-- Sidebar -->
-      <SidebarPanel 
+      <SidebarPanel
         :is-open="sidebarOpen"
         :sidebar-open="sidebarOpen"
         :layersState="layers"
@@ -255,7 +256,7 @@ function handleResetSelection() {
 
       <!-- Map Container -->
       <div class="flex-1 relative h-full overflow-hidden">
-        <MapContainer 
+        <MapContainer
           ref="mapContainerRef"
           :layers="layers"
           :selectedPotrero="selectedPotrero"
@@ -266,15 +267,15 @@ function handleResetSelection() {
           @update-bosques-data="updateBosquesData"
           @update-suelo-data="updateSueloData"
         />
-        
+
         <!-- Chatbot Flotante con datos -->
-        <FloatingChatbot 
+        <FloatingChatbot
           :potrerosData="potrerosData"
           :selectedPotrero="selectedPotrero"
           @select-potrero="handleSelectPotrero"
           @toggle-layer="handleToggleLayer"
         />
-        
+
         <!-- Tabla de atributos - Reutilizable para diferentes capas -->
         <AttributeTable
           :is-visible="showAttributeTable"
