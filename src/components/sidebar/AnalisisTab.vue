@@ -29,9 +29,9 @@ onMounted(async () => {
 // Filtrar potreros según el término de búsqueda
 const filteredPotreros = computed(() => {
   if (!searchTerm.value) return potrerosNames.value
-  
+
   const term = searchTerm.value.toLowerCase()
-  return potrerosNames.value.filter(p => 
+  return potrerosNames.value.filter(p =>
     p.nombre.toLowerCase().includes(term)
   )
 })
@@ -88,10 +88,10 @@ function clearSelection() {
 </script>
 
 <template>
-  <section 
-    id="analisis" 
-    class="tab-panel sidebar-content w-full p-5" 
-    role="tabpanel" 
+  <section
+    id="analisis"
+    class="tab-panel sidebar-content w-full p-5 overflow-y-auto overflow-x-hidden max-h-[calc(100vh-200px)]"
+    role="tabpanel"
     aria-labelledby="tab-analisis"
   >
     <section class="mb-3 relative z-10">
@@ -102,7 +102,7 @@ function clearSelection() {
         <strong>Parcela:</strong> La Palma
       </div>
       <div class="py-1.5 border-b border-slate-200 font-normal leading-tight transition-all duration-300 relative z-10 text-gray-700 text-xs">
-        <strong>Superficie: </strong> 
+        <strong>Superficie: </strong>
         <span v-if="isLoading" class="text-teal-600">
           <svg class="inline animate-spin h-3 w-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -119,20 +119,20 @@ function clearSelection() {
         <span v-if="!isLoading && !error"> ha</span>
       </div>
       <div class="py-1.5 border-b border-slate-200 font-normal leading-tight transition-all duration-300 relative z-10 text-gray-700 text-xs">
-        <strong>Total de Potreros: </strong> 
+        <strong>Total de Potreros: </strong>
         <span v-if="isLoading" class="text-teal-600">...</span>
         <span v-else class="font-semibold text-teal-700">{{ totalPotreros }}</span>
       </div>
-      
+
       <!-- Filtro de Potreros con Dropdown y Búsqueda -->
       <div class="py-1.5 border-b border-slate-200 font-normal leading-tight transition-all duration-300 relative text-gray-700 text-xs">
         <label for="search-potreros" class="block text-xs font-medium text-gray-700 mb-1">
           Filtrar Potreros
         </label>
-        
+
         <!-- Input de búsqueda -->
         <div class="relative">
-          <input 
+          <input
             ref="dropdownRef"
             id="search-potreros"
             v-model="searchTerm"
@@ -143,7 +143,7 @@ function clearSelection() {
             @input="updateDropdownPosition($event)"
             class="w-full text-xs p-2 pr-12 border border-slate-200 rounded-md bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-200 focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
           />
-          
+
           <!-- Iconos de búsqueda y limpiar -->
           <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
             <button
@@ -157,10 +157,10 @@ function clearSelection() {
             <span class="text-gray-400 pointer-events-none">🔍</span>
           </div>
         </div>
-        
+
         <!-- Dropdown de opciones con posición fija -->
         <Teleport to="body">
-          <div 
+          <div
             v-if="isDropdownOpen && filteredPotreros.length > 0"
             class="fixed bg-white border border-slate-200 rounded-md shadow-xl z-50 max-h-64 overflow-y-auto"
             :style="{
@@ -169,8 +169,8 @@ function clearSelection() {
               width: dropdownPosition.width + 'px'
             }"
           >
-            <div 
-              v-for="potrero in filteredPotreros" 
+            <div
+              v-for="potrero in filteredPotreros"
               :key="potrero.id"
               @click="selectPotrero(potrero.id)"
               class="px-3 py-2 hover:bg-teal-50 cursor-pointer transition text-xs text-gray-700 flex justify-between items-center border-b border-slate-100 last:border-b-0"
@@ -179,9 +179,9 @@ function clearSelection() {
               <span class="text-xs text-gray-500">{{ potrero.superficie.toFixed(1) }} ha</span>
             </div>
           </div>
-          
+
           <!-- Mensaje cuando no hay resultados -->
-          <div 
+          <div
             v-if="isDropdownOpen && filteredPotreros.length === 0"
             class="fixed bg-white border border-slate-200 rounded-md shadow-xl z-50 p-3 text-center text-gray-500 text-xs"
             :style="{
@@ -193,7 +193,7 @@ function clearSelection() {
             No se encontraron potreros
           </div>
         </Teleport>
-        
+
         <!-- Información del potrero seleccionado -->
         <div v-if="selectedPotreroData" class="mt-2 p-2 bg-teal-50 rounded-md border border-teal-200 relative">
           <button
@@ -203,9 +203,9 @@ function clearSelection() {
           >
             ✕
           </button>
-          
+
           <p class="text-xs text-gray-700 pr-4">
-            <strong class="text-teal-800">Potrero:</strong> 
+            <strong class="text-teal-800">Potrero:</strong>
             <span class="text-xs font-semibold text-teal-900">
               {{ selectedPotreroData.nombre }}
             </span>
@@ -213,14 +213,14 @@ function clearSelection() {
           <p class="text-xs text-gray-600 mt-0.5">
             <strong>Superficie:</strong> {{ selectedPotreroData.superficie.toFixed(2) }} ha
           </p>
-          
+
           <!-- Imagen del potrero desde Google Drive -->
           <div v-if="selectedPotreroData.url_drive && selectedPotreroData.url_drive.iframeUrl" class="mt-2">
             <p class="text-xs font-semibold text-gray-700 mb-1">Imagen del Potrero:</p>
             <div class="bg-white rounded-md border-2 border-teal-300 overflow-hidden">
               <!-- Mostrar iframe de Google Drive -->
-              <iframe 
-                :src="selectedPotreroData.url_drive.iframeUrl" 
+              <iframe
+                :src="selectedPotreroData.url_drive.iframeUrl"
                 class="w-full h-48 border-0 block"
                 allow="autoplay"
               ></iframe>

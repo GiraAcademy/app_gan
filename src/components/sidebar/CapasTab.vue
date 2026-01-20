@@ -161,7 +161,7 @@ function getLayerError(layerId) {
 <template>
   <section
     id="capas"
-    class="tab-panel sidebar-content w-full p-5"
+    class="tab-panel sidebar-content w-full p-5 overflow-y-auto overflow-x-hidden max-h-[calc(100vh-200px)]"
     role="tabpanel"
     aria-labelledby="tab-capas"
   >
@@ -295,59 +295,127 @@ function getLayerError(layerId) {
         Leyenda
       </h2>
 
+      <!-- Subtítulo: Modelo Digital de Elevación (MDE) -->
+      <h3 class="mb-2 text-xs font-semibold text-gray-700 mt-3">🏔️ Modelo Digital de Elevación</h3>
+      <div class="space-y-1.5 mb-4 text-xs">
+        <!-- < 126 -->
+        <div class="flex items-center gap-2.5">
+          <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #30123b;"></div>
+          <span class="text-gray-700">&lt; 126 m</span>
+        </div>
+
+        <!-- 126 a 135 -->
+        <div class="flex items-center gap-2.5">
+          <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #28bceb;"></div>
+          <span class="text-gray-700">126 a 135 m</span>
+        </div>
+
+        <!-- 135 a 153 -->
+        <div class="flex items-center gap-2.5">
+          <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #a4fc3c;"></div>
+          <span class="text-gray-700">135 a 153 m</span>
+        </div>
+
+        <!-- 153 a 187 -->
+        <div class="flex items-center gap-2.5">
+          <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #fb7e21;"></div>
+          <span class="text-gray-700">153 a 187 m</span>
+        </div>
+
+        <!-- > 187 -->
+        <div class="flex items-center gap-2.5">
+          <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #7a0403;"></div>
+          <span class="text-gray-700">&gt; 187 m</span>
+        </div>
+      </div>
+
+      <!-- Subtítulo: Pendiente -->
+      <h3 class="mb-2 text-xs font-semibold text-gray-700 mt-3">📐 Pendiente</h3>
+      <div class="space-y-1.5 mb-4 text-xs">
+        <!-- 0 a 4% -->
+        <div class="flex items-center gap-2.5">
+          <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #22c55e;"></div>
+          <span class="text-gray-700">0 a 4 %</span>
+        </div>
+
+        <!-- 4 a 8% -->
+        <div class="flex items-center gap-2.5">
+          <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #eab308;"></div>
+          <span class="text-gray-700">4 a 8 %</span>
+        </div>
+
+        <!-- 8 a 20% -->
+        <div class="flex items-center gap-2.5">
+          <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #84cc16;"></div>
+          <span class="text-gray-700">8 a 20 %</span>
+        </div>
+
+        <!-- 20 a 45% -->
+        <div class="flex items-center gap-2.5">
+          <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #ff8c00;"></div>
+          <span class="text-gray-700">20 a 45 %</span>
+        </div>
+
+        <!-- > 45% -->
+        <div class="flex items-center gap-2.5">
+          <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #8b0000;"></div>
+          <span class="text-gray-700">&gt; 45 %</span>
+        </div>
+      </div>
+
       <!-- Subtítulo: Bosques -->
       <h3 class="mb-2 text-xs font-semibold text-gray-700 mt-3">🌲 Bosques</h3>
-      <div class="space-y-2 mb-4">
+      <div class="space-y-1.5 mb-4 text-xs">
         <!-- Laguna -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2.5">
           <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #0066CC;"></div>
-          <span class="text-xs text-gray-700">Laguna</span>
+          <span class="text-gray-700">Laguna</span>
         </div>
 
         <!-- Vegetación boscosa -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2.5">
           <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #006400;"></div>
-          <span class="text-xs text-gray-700">Vegetación boscosa</span>
+          <span class="text-gray-700">Vegetación boscosa</span>
         </div>
 
         <!-- Área agropecuaria -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2.5">
           <div class="w-4 h-4 rounded border border-gray-300" style="background-color: #F5DEB3;"></div>
-          <span class="text-xs text-gray-700">Área agropecuaria</span>
+          <span class="text-gray-700">Área agropecuaria</span>
         </div>
       </div>
 
       <!-- Subtítulo: Fertilidad de Suelo -->
       <h3 class="mb-2 text-xs font-semibold text-gray-700 mt-3">🌱 Fertilidad de Suelo</h3>
-      <div class="space-y-2">
+      <div class="space-y-1.5 text-xs">
         <!-- Ligeras -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2.5">
           <div class="w-4 h-4 rounded-full border border-gray-300" style="background-color: #22c55e;"></div>
-          <span class="text-xs text-gray-700">Ligeras</span>
+          <span class="text-gray-700">Ligeras</span>
         </div>
 
         <!-- Moderadas -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2.5">
           <div class="w-4 h-4 rounded-full border border-gray-300" style="background-color: #eab308;"></div>
-          <span class="text-xs text-gray-700">Moderadas</span>
+          <span class="text-gray-700">Moderadas</span>
         </div>
 
         <!-- Fuertes -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2.5">
           <div class="w-4 h-4 rounded-full border border-gray-300" style="background-color: #ff8c00;"></div>
-          <span class="text-xs text-gray-700">Fuertes</span>
+          <span class="text-gray-700">Fuertes</span>
         </div>
 
         <!-- Severas -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2.5">
           <div class="w-4 h-4 rounded-full border border-gray-300" style="background-color: #ef4444;"></div>
-          <span class="text-xs text-gray-700">Severas</span>
+          <span class="text-gray-700">Severas</span>
         </div>
 
         <!-- Sin datos -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2.5">
           <div class="w-4 h-4 rounded-full border border-gray-300" style="background-color: #9ca3af;"></div>
-          <span class="text-xs text-gray-700">Sin datos</span>
+          <span class="text-gray-700">Sin datos</span>
         </div>
       </div>
     </section>
